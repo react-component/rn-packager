@@ -44,10 +44,10 @@ url请求参数新增`framework=true`
 
 ## Programmatic API
 ```
-var packager = require('rn-packager');
+var RNPackager = require('rn-packager');
 
 gulp.task('task', function(){
-  return antPack.bundle({
+  return RNPackager.bundle({
     "--entry-file": "tests/index.ios.js",
     "--bundle-output": "tests/index.ios.bundle",
     "--platform": "ios"
