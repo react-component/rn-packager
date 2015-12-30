@@ -13,7 +13,7 @@ var path = require('path');
 // Don't forget to everything listed here to `testConfig.json`
 // modulePathIgnorePatterns.
 var sharedBlacklist = [
-  'antpack/src/react-native/package.json',  // @Denis 避免和业务依赖的核心框架依赖冲突
+  'rn-packager/src/react-native/package.json',  // @Denis 避免和业务依赖的核心框架依赖冲突
   
   'node_modules/react-haste/renderers/shared/event/eventPlugins/ResponderEventPlugin.js',
   'node_modules/react-haste/React.js',

@@ -9,7 +9,7 @@
 'use strict';
 
 require('./packager/babelRegisterOnly')([
-  /private-cli\/src/
+  /local-cli/
 ]);
 
 module.exports = require('./local-cli/cli.js');

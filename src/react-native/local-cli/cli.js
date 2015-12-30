@@ -9,7 +9,7 @@
 'use strict';
 
 require('../packager/babelRegisterOnly')([
-  /private-cli\/src/,
+  // /private-cli\/src/,  @Denis private-cli has removed
   /local-cli/
 ]);
 
@@ -42,7 +42,7 @@ var documentedCommands = {
   'start': [server, 'starts the webserver'],
   'bundle': [bundle, 'builds the javascript bundle for offline use'],
   'unbundle': [unbundle, 'builds javascript as "unbundle" for offline use'],
-  'version': [versionInfo, 'print antpack version']
+  'version': [versionInfo, 'print version']
   // @Denis 暂不支持下面的功能
   // 'new-library': [library, 'generates a native library bridge'],
   // 'link': [link, 'Adds a third-party library to your project. Example: react-native link awesome-camera'],

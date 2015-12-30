@@ -7,5 +7,5 @@
 'use strict';
 
 module.exports = {
-  bundle: require('./react-native/private-cli/src/bundle/bundle')
+  bundle: require('./react-native/local-cli/bundle/bundle')
 };
