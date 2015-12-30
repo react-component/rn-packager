@@ -69,7 +69,6 @@ class ResolutionRequest {
     }
 
     const cacheResult = (result) => {
-      console.log(dependencies);
       // @Denis 记录工程插件白名单
       if (dependencies[toModuleName]) {
         if (this._whiteResolvedDependencies[toModuleName]) {
@@ -134,7 +133,12 @@ class ResolutionRequest {
         if (!this._includeFramework && /\/src\/react-native\/Libraries\//.test(mod.path)) {
           return;
         }
+        // 不再打包与react-native依赖重名不同路径的模块
         if(this._whiteDependencies[mod.path] === 'disable') {
+          return;
+        }
+        // 只打业务包的时候，不再打包与react-native依赖重名的模块
+        if (!this._includeFramework && this._whiteDependencies[mod.path] === 'enable') {
           return;
         }
         response.pushDependency(mod);
