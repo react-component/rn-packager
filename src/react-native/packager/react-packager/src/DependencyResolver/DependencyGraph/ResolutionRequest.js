@@ -69,6 +69,7 @@ class ResolutionRequest {
     }
 
     const cacheResult = (result) => {
+      console.log(dependencies);
       // @Denis 记录工程插件白名单
       if (dependencies[toModuleName]) {
         if (this._whiteResolvedDependencies[toModuleName]) {
@@ -132,7 +133,7 @@ class ResolutionRequest {
         // @Denis 跳过框架 框架子模块及框架依赖的模块打包 比如 react-timer-mixin
         if (!this._includeFramework && /\/src\/react-native\/Libraries\//.test(mod.path)) {
           return;
-        }console.log('ModPath: ', mod.path);
+        }
         if(this._whiteDependencies[mod.path] === 'disable') {
           return;
         }
