@@ -195,7 +195,10 @@ class Bundler {
       transformedModules.forEach(function(moduleTransport) {
         bbundle.addModule(moduleTransport);
       });
-
+      // @丹侠 业务脚本不需要runBeforeMainModule
+      if (!includeFramework) {
+        runBeforeMainModule = [];
+      }
       bbundle.finalize({runBeforeMainModule, runMainModule});
       return bbundle;
     });
