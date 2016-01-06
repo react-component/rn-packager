@@ -73,8 +73,9 @@ var sharedBlacklist = [
 // Raw unescaped patterns in case you need to use wildcards
 var sharedBlacklistWildcards = [
   'website\/node_modules\/.*',
-  // @Denis 忽略spm模块的依赖分析
+  // @Denis 忽略目录
   '\/spm_modules\/.*',
+  '\/rn-tools\/.*'
 ];
 
 var platformBlacklists = {
