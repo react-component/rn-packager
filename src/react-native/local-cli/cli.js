@@ -92,8 +92,8 @@ function run() {
     printUsage();
     return;
   }
-
-  command[0](args, Config.get(__dirname, defaultConfig)).done();
+  // @Denis 从当前执行目录下去找 rn-cli.config.js
+  command[0](args, Config.get(process.cwd(), defaultConfig)).done();
 }
 
 function generateWrapper(args, config) {
