@@ -54,3 +54,12 @@ gulp.task('task', function(){
   });
 });
 ```
+
+## Project Sample
+
+```
+$ cd tests
+$ npm i
+$ rnpackager start
+```
+visit [http://localhost:8081/index.ios.bundle?platform=android](http://localhost:8081/index.ios.bundle?platform=android)

@@ -1,0 +1,7 @@
+{
+  "name": "rn-packager-demo",
+  "version": "0.1.0",
+  "devDependencies": {
+    "rmc-react-native": "~0.2.0"
+  }
+}
