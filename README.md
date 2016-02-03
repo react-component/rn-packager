@@ -62,4 +62,7 @@ $ cd tests
 $ npm i
 $ rnpackager start
 ```
-visit [http://localhost:8081/index.ios.bundle?platform=android](http://localhost:8081/index.ios.bundle?platform=android)
+Visit:
+
+* [http://localhost:8081/index.ios.bundle?platform=ios](http://localhost:8081/index.ios.bundle?platform=ios)
+* [http://localhost:8081/index.android.bundle?platform=android](http://localhost:8081/index.android.bundle?platform=android)
