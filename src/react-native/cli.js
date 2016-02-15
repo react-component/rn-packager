@@ -8,6 +8,7 @@
  */
 'use strict';
 
+// @Denis
 require('./packager/babelRegisterOnly')([
   /local-cli/
 ]);

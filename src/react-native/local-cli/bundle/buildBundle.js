@@ -25,17 +25,19 @@ function buildBundle(args, config, output = outputBundle) {
       projectRoots: config.getProjectRoots(),
       assetRoots: config.getAssetRoots(),
       blacklistRE: config.getBlacklistRE(),
+      getTransformOptionsModulePath: config.getTransformOptionsModulePath,
       transformModulePath: args.transformer,
       verbose: args.verbose,
+      disableInternalTransforms: true,
     };
 
     const requestOpts = {
       entryFile: args['entry-file'],
+      sourceMapUrl: args['sourcemap-output'],
       dev: args.dev,
       minify: !args.dev,
       platform: args.platform,
-      includeFramework: args['include-framework'],  // @Denis
-      resetCache: true, // @Denis 命令行打包关闭缓存
+      includeFramework: args['include-framework']  // @Denis
     };
 
     const clientPromise = ReactPackager.createClientFor(options);

@@ -14,7 +14,7 @@ const path = require('path');
 const Promise = require('promise');
 const ProgressBar = require('progress');
 const BundlesLayout = require('../BundlesLayout');
-const Cache = require('../Cache');
+const Cache = require('../DependencyResolver/Cache');
 const Transformer = require('../JSTransformer');
 const Resolver = require('../Resolver');
 const Bundle = require('./Bundle');
@@ -23,6 +23,7 @@ const Activity = require('../Activity');
 const ModuleTransport = require('../lib/ModuleTransport');
 const declareOpts = require('../lib/declareOpts');
 const imageSize = require('image-size');
+const version = require('../../../../package.json').version;
 
 const sizeOf = Promise.denodeify(imageSize);
 const readFile = Promise.denodeify(fs.readFile);
@@ -79,6 +80,10 @@ const validateOpts = declareOpts({
     type: 'number',
     required: false,
   },
+  disableInternalTransforms: {
+    type: 'boolean',
+    default: false,
+  },
 });
 
 class Bundler {
@@ -88,11 +93,23 @@ class Bundler {
 
     opts.projectRoots.forEach(verifyRootExists);
 
+    let mtime;
+    try {
+      ({mtime} = fs.statSync(opts.transformModulePath));
+      mtime = String(mtime.getTime());
+    } catch (error) {
+      mtime = '';
+    }
+
     this._cache = new Cache({
       resetCache: opts.resetCache,
-      cacheVersion: opts.cacheVersion,
-      projectRoots: opts.projectRoots,
-      transformModulePath: opts.transformModulePath,
+      cacheKey: [
+        'react-packager-cache',
+        version,
+        opts.cacheVersion,
+        opts.projectRoots.join(',').split(path.sep).join('-'),
+        mtime
+      ].join('$'),
     });
 
     this._resolver = new Resolver({
@@ -118,10 +135,15 @@ class Bundler {
       blacklistRE: opts.blacklistRE,
       cache: this._cache,
       transformModulePath: opts.transformModulePath,
+      disableInternalTransforms: opts.disableInternalTransforms,
     });
 
     this._projectRoots = opts.projectRoots;
     this._assetServer = opts.assetServer;
+
+    if (opts.getTransformOptionsModulePath) {
+      this._getTransformOptionsModule = require(opts.getTransformOptionsModulePath);
+    }
   }
 
   kill() {
@@ -142,6 +164,7 @@ class Bundler {
     platform,
     includeFramework, //@Denis
     unbundle: isUnbundle,
+    hot: hot,
   }) {
     // Const cannot have the same name as the method (babel/babel#2834)
     const bbundle = new Bundle(sourceMapUrl);
@@ -180,7 +203,8 @@ class Bundler {
             bbundle,
             response,
             module,
-            platform
+            platform,
+            hot,
           ).then(transformed => {
             if (bar) {
               bar.tick();
@@ -195,10 +219,7 @@ class Bundler {
       transformedModules.forEach(function(moduleTransport) {
         bbundle.addModule(moduleTransport);
       });
-      // @丹侠 业务脚本不需要runBeforeMainModule
-      if (!includeFramework) {
-        runBeforeMainModule = [];
-      }
+
       bbundle.finalize({runBeforeMainModule, runMainModule});
       return bbundle;
     });
@@ -266,8 +287,67 @@ class Bundler {
     });
   }
 
+  bundleForHMR({entryFile, platform, modules}) {
+    return this.getDependencies(entryFile, /*isDev*/true, platform)
+      .then(response => {
+        return Promise.all(
+          modules.map(module => {
+            return Promise.all([
+              module.getName(),
+              this._transformModuleForHMR(module, platform),
+            ]).then(([moduleName, transformed]) => {
+              return this._resolver.resolveRequires(response,
+                module,
+                transformed.code,
+              ).then(({name, code}) => {
+                return (`
+                  __accept(
+                    '${moduleName}',
+                    function(global, require, module, exports) {
+                      ${code}
+                    }
+                  );
+                `);
+              });
+            });
+          })
+        );
+      })
+      .then(modules => modules.join('\n'));
+  }
+
+  _transformModuleForHMR(module, platform) {
+    if (module.isAsset()) {
+      return this._generateAssetObjAndCode(module, platform).then(
+        ({asset, code}) => {
+          return {
+            code,
+          };
+        }
+      );
+    } else {
+      return this._transformer.loadFileAndTransform(
+        module.path,
+        // TODO(martinb): pass non null main (t9527509)
+        this._getTransformOptions({main: null}, {hot: true}),
+      );
+    }
+  }
+
   invalidateFile(filePath) {
     this._transformer.invalidateFile(filePath);
+  }
+
+  getShallowDependencies(entryFile) {
+    return this._resolver.getShallowDependencies(entryFile);
+  }
+
+  stat(filePath) {
+    return this._resolver.stat(filePath);
+  }
+
+  getModuleForPath(entryFile) {
+    return this._resolver.getModuleForPath(entryFile);
   }
 
   // @Denis
@@ -277,7 +357,7 @@ class Bundler {
 
   // @Denis
   getOrderedDependencyPaths({ entryFile, dev, platform, includeFramework }) {
-    return this.getDependencies(entryFile, dev, platform).then(
+    return this.getDependencies(entryFile, dev, platform, includeFramework).then(
       ({ dependencies }) => {
         const ret = [];
         const promises = [];
@@ -308,16 +388,20 @@ class Bundler {
     );
   }
 
-  _transformModule(bundle, response, module, platform = null) {
+  _transformModule(bundle, response, module, platform = null, hot = false) {
     if (module.isAsset_DEPRECATED()) {
-      return this.generateAssetModule_DEPRECATED(bundle, module);
+      return this._generateAssetModule_DEPRECATED(bundle, module);
     } else if (module.isAsset()) {
-      return this.generateAssetModule(bundle, module, platform);
+      return this._generateAssetModule(bundle, module, platform);
     } else if (module.isJSON()) {
       return generateJSONModule(module);
     } else {
       return this._transformer.loadFileAndTransform(
-        path.resolve(module.path)
+        path.resolve(module.path),
+        this._getTransformOptions(
+          {bundleEntry: bundle.getMainModuleId(), modulePath: module.path},
+          {hot: hot},
+        ),
       );
     }
   }
@@ -343,7 +427,7 @@ class Bundler {
     return this._resolver.getDebugInfo();
   }
 
-  generateAssetModule_DEPRECATED(bundle, module) {
+  _generateAssetModule_DEPRECATED(bundle, module) {
     return Promise.all([
       sizeOf(module.path),
       module.getName(),
@@ -370,10 +454,10 @@ class Bundler {
     });
   }
 
-  generateAssetModule(bundle, module, platform = null) {
+  _generateAssetObjAndCode(module, platform = null) {
     const relPath = getPathRelativeToRoot(this._projectRoots, module.path);
     var assetUrlPath = path.join('/assets', path.dirname(relPath));
-    
+
     // On Windows, change backslashes to slashes to get proper URL path from file path.
     if (path.sep === '\\') {
       assetUrlPath = assetUrlPath.replace(/\\/g, '/');
@@ -385,7 +469,7 @@ class Bundler {
     ]).then(function(res) {
       const dimensions = res[0];
       const assetData = res[1];
-      const img = {
+      const asset = {
         __packager_asset: true,
         fileSystemLocation: path.dirname(module.path),
         httpServerLocation: assetUrlPath,
@@ -398,11 +482,17 @@ class Bundler {
         type: assetData.type,
       };
 
-      bundle.addAsset(img);
-
       const ASSET_TEMPLATE = 'module.exports = require("AssetRegistry").registerAsset(%json);';
-      const code = ASSET_TEMPLATE.replace('%json', JSON.stringify(img));
+      const code = ASSET_TEMPLATE.replace('%json', JSON.stringify(asset));
 
+      return {asset, code};
+    });
+  }
+
+
+  _generateAssetModule(bundle, module, platform = null) {
+    return this._generateAssetObjAndCode(module, platform).then(({asset, code}) => {
+      bundle.addAsset(asset);
       return new ModuleTransport({
         code: code,
         sourceCode: code,
@@ -410,6 +500,14 @@ class Bundler {
         virtual: true,
       });
     });
+  }
+
+  _getTransformOptions(config, options) {
+    const transformerOptions = this._getTransformOptionsModule
+      ? this._getTransformOptionsModule(config)
+      : null;
+
+    return {...options, ...transformerOptions};
   }
 }
 

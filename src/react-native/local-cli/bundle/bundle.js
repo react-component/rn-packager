@@ -16,7 +16,6 @@ require('../../packager/babelRegisterOnly')([
 const Config = require('../util/Config');
 const defaultConfig = require('../default.config');
 
-
 const buildBundle = require('./buildBundle');
 const bundleCommandLineArgs = require('./bundleCommandLineArgs');
 const parseCommandLine = require('../util/parseCommandLine');
@@ -45,7 +44,7 @@ function bundle(argv, config) {
     }
     argv = args;
     config = Config.get(__dirname, defaultConfig);
-  }
+  }  
   return bundleWithOutput(argv, config);
 }
 
