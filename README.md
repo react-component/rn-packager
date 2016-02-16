@@ -1,6 +1,6 @@
 # Packager
 
-![react-native](https://img.shields.io/badge/react--native-%3D_0.17.0-green.svg)
+![react-native](https://img.shields.io/badge/react--native-%3D_0.19.0-green.svg)
 
 ## Install
 
@@ -12,10 +12,10 @@ $ npm install rn-packager -g
 
 ```
 "devDependencies": {
-  "rmc-react-native": "~0.2.0"
+  "rn-core": "~0.2.0"
 }
 ```
-"rmc-react-native" 是 `0.17.0` 的全量sdk工程，你可以 获取 [m-react-native](https://github.com/react-component/m-react-native) `tag 0.2.0` 的代码来精简你的JS核心SDK文件，修改 devDependencies 依赖精简后的工程。
+"rn-core" 是 `0.19.0` 的全量sdk工程，你可以 获取 [rn-core](https://github.com/react-component/rn-core) `tag v0.2.1` 的代码来精简你的JS核心SDK文件，修改 devDependencies 依赖精简后的工程。
 
 ## rnpackager bundle
 > 在项目工程根目录下执行打包命令，默认不打包框架代码及polyfills
@@ -32,7 +32,7 @@ Options, 参数参考react-native命令，增加了`--include-framework`:
 ## Bundle sdk
 
 ```
-$ rnpackager bundle --entry-file node_modules/rmc-react-native/src/react-native/Libraries/react-native/react-native.js --bundle-output ~/Desktop/react-native-debug.js --platform ios --include-framework
+$ rnpackager bundle --entry-file node_modules/rn-core/react-native/Libraries/react-native/react-native.js --bundle-output ~/Desktop/react-native-debug.js --platform ios --include-framework
 ```
 
 ## Server
