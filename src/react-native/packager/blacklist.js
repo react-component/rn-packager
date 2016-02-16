@@ -73,7 +73,7 @@ var sharedBlacklist = [
   // @Denis 忽略
   /[/\\]spm_modules[/\\].*/,
   /[/\\]rn-tools[/\\].*/,
-  // 'rn-packager/src/react-native/package.json',
+  'rn-packager/src/react-native/package.json',
 ];
 
 var platformBlacklists = {
