@@ -60,7 +60,7 @@ class ResolutionRequest {
     const resHash = resolutionHash(fromModule.path, toModuleName);
 
     // @Denis
-    console.log(resHash);
+    // console.log(resHash);
     if (this._immediateResolutionCache[resHash]) {
       return Promise.resolve(this._immediateResolutionCache[resHash]);
     }
@@ -135,9 +135,11 @@ class ResolutionRequest {
       const visited = Object.create(null);
       visited[entry.hash()] = true;
 
+      console.log("依赖模块路径: ")
       const collect = (mod) => {
+        console.log("> ", mod.path);
         // @Denis 跳过框架 框架子模块及框架依赖的模块打包 比如 react-timer-mixin
-        if (!this._includeFramework && /\/react-native\/Libraries\//.test(mod.path)) {
+        if (!this._includeFramework && /\/rn-core\//.test(mod.path)) {
           return;
         }
         // 不再打包与react-native依赖重名不同路径的模块
