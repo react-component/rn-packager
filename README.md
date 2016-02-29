@@ -15,7 +15,7 @@ $ npm install rn-packager -g
   "rn-core": "~0.2.0"
 }
 ```
-"rn-core" 是 `0.19.0` 的全量sdk工程，你可以 获取 [rn-core](https://github.com/react-component/rn-core) `tag v0.2.1` 的代码来精简你的JS核心SDK文件，修改 devDependencies 依赖精简后的工程。
+"rn-core" 是 `0.19.0` 的全量sdk工程，从官方的 "react-native" 依赖中抽取了必要的代码，做了精简。
 
 ## rnpackager bundle
 > 在项目工程根目录下执行打包命令，默认不打包框架代码及polyfills
