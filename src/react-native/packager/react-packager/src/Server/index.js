@@ -531,6 +531,7 @@ class Server {
       minify: this._getBoolOptionFromQuery(urlObj.query, 'minify'),
       hot: this._getBoolOptionFromQuery(urlObj.query, 'hot', false),
       runModule: this._getBoolOptionFromQuery(urlObj.query, 'runModule', true),
+      runBeforeMainModule: this._getArrayOptionFromQuery(urlObj.query, 'runBeforeMainModule'),  // 增加runBeforeMainModule配置 @Denis
       inlineSourceMap: this._getBoolOptionFromQuery(
         urlObj.query,
         'inlineSourceMap',
@@ -547,6 +548,14 @@ class Server {
     }
 
     return query[opt] === 'true' || query[opt] === '1';
+  }
+  // @Denis 增加数组解析方法
+  _getArrayOptionFromQuery(query, opt, defaultVal) {
+    var val = defaultVal;
+    try {
+      val = JSON.parse(query[opt]);
+    } catch(e) {}
+    return val;
   }
 }
 

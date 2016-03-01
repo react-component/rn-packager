@@ -61,5 +61,10 @@ module.exports = [
     command: 'verbose',
     description: 'Enables logging',
     default: false,
+  }, { // @Denis 增加runBeforeMainModule
+    command: 'runBeforeMainModule',
+    description: 'Modules required before main module',
+    type: 'string',
+    required: false,
   }
 ];

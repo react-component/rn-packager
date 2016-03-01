@@ -24,9 +24,10 @@ $ npm install rn-packager -g
 $ rnpackager bundle --entry-file  entry/file/path.js --bundle-output out/file/path.jsbundle --platform ios
 ```
 
-Options, 参数参考react-native命令，增加了`--include-framework`:
+Options, 参数参考react-native命令，增加了参数：
 
-*  --include-framework  Whether to bundle include module `react-native` and polyfills                          [default: false]
+*  --include-framework  Whether to bundle include module `react-native` and polyfills   [default: false]
+*  --runBeforeMainModule  Modules required before main module                           [default: "InitializeJavaScriptAppEngine"]
     
 
 ## Bundle sdk
@@ -40,7 +41,7 @@ $ rnpackager bundle --entry-file node_modules/rn-core/react-native/Libraries/rea
 ```
 $ rnpackager start
 ```
-url请求参数新增`framework=true` 
+url请求参数新增 `framework=true` `runBeforeMainModule=[]`
 
 ## Programmatic API
 ```
