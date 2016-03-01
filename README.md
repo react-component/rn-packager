@@ -27,7 +27,7 @@ $ rnpackager bundle --entry-file  entry/file/path.js --bundle-output out/file/pa
 Options, 参数参考react-native命令，增加了参数：
 
 *  --include-framework  Whether to bundle include module `react-native` and polyfills   [default: false]
-*  --runBeforeMainModule  Modules required before main module                           [default: "InitializeJavaScriptAppEngine"]
+*  --runBeforeMainModule  Modules required before main module                           [default: ["InitializeJavaScriptAppEngine"]]
     
 
 ## Bundle sdk
