@@ -70,7 +70,12 @@ var sharedBlacklist = [
   'downstream/core/toArray.js',
 
   /website\/node_modules\/.*/,
+
+  // TODO(jkassens, #9876132): Remove this rule when it's no longer needed.
+  'Libraries/Relay/relay/tools/relayUnstableBatchedUpdates.js',
+
   // @Denis 忽略
+  /[/\\]node_modules[/\\]react-native[/\\].*/,
   /[/\\]spm_modules[/\\].*/,
   /[/\\]rn-tools[/\\].*/,
   'rn-packager/src/react-native/package.json',

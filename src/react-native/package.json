@@ -1,11 +1,11 @@
 {
   "name": "react-native",
-  "version": "0.19.0",
+  "version": "0.21.0",
   "description": "A framework for building native apps using React",
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/facebook/react-native.git"
+    "url": "git@github.com:facebook/react-native.git"
   },
   "engines": {
     "node": ">=4"
@@ -22,6 +22,7 @@
       "/node_modules/"
     ],
     "modulePathIgnorePatterns": [
+      "/node_modules/(?!react|fbjs|react-native|parse|react-transform-hmr|core-js|promise)/",
       "node_modules/react/lib/React.js",
       "node_modules/react/lib/ReactDOM.js",
       "node_modules/fbjs/lib/Map.js",
@@ -81,7 +82,7 @@
   "files": [
     "React",
     "React.podspec",
-    "ReactAndroid",
+    "android",
     "Libraries",
     "packager",
     "cli.js",
@@ -104,35 +105,13 @@
   "dependencies": {
     "absolute-path": "^0.0.0",
     "art": "^0.10.0",
-    "babel-core": "^6.1.20",
-    "babel-plugin-external-helpers-2": "^6.1.4",
-    "babel-plugin-syntax-async-functions": "^6.0.14",
-    "babel-plugin-syntax-class-properties": "^6.0.14",
-    "babel-plugin-syntax-flow": "^6.0.14",
-    "babel-plugin-syntax-jsx": "^6.0.14",
-    "babel-plugin-syntax-trailing-function-commas": "^6.0.14",
-    "babel-plugin-transform-class-properties": "^6.0.14",
-    "babel-plugin-transform-es2015-arrow-functions": "^6.0.14",
-    "babel-plugin-transform-es2015-block-scoping": "^6.0.18",
-    "babel-plugin-transform-es2015-classes": "^6.1.2",
-    "babel-plugin-transform-es2015-computed-properties": "^6.0.14",
-    "babel-plugin-transform-es2015-constants": "^6.0.15",
-    "babel-plugin-transform-es2015-destructuring": "^6.0.18",
-    "babel-plugin-transform-es2015-for-of": "^6.0.14",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.1.3",
-    "babel-plugin-transform-es2015-parameters": "^6.0.18",
-    "babel-plugin-transform-es2015-shorthand-properties": "^6.0.14",
-    "babel-plugin-transform-es2015-spread": "^6.0.14",
-    "babel-plugin-transform-es2015-template-literals": "^6.0.14",
-    "babel-plugin-transform-flow-strip-types": "^6.0.14",
-    "babel-plugin-transform-object-assign": "^6.0.14",
-    "babel-plugin-transform-object-rest-spread": "^6.0.14",
-    "babel-plugin-transform-react-display-name": "^6.0.14",
-    "babel-plugin-transform-react-jsx": "^6.0.18",
-    "babel-plugin-transform-regenerator": "^6.0.18",
-    "babel-polyfill": "^6.0.16",
-    "babel-types": "^6.1.2",
-    "babylon": "^6.1.2",
+    "babel-core": "~6.4.5",
+    "babel-plugin-external-helpers": "~6.4.0",
+    "babel-polyfill": "~6.3.14",
+    "babel-preset-react-native": "^1.2.4",
+    "babel-register": "~6.4.3",
+    "babel-types": "~6.4.5",
+    "babylon": "~6.4.5",
     "base64-js": "^0.0.8",
     "bser": "^1.0.2",
     "chalk": "^1.1.1",
@@ -156,8 +135,7 @@
     "promise": "^7.1.1",
     "react": "^0.14.5",
     "react-timer-mixin": "^0.13.2",
-    "react-transform-hmr": "^1.0.1",
-    "babel-plugin-react-transform": "2.0.0-beta1",
+    "react-transform-hmr": "^1.0.2",
     "rebound": "^0.0.13",
     "regenerator": "^0.8.36",
     "sane": "^1.2.0",
@@ -181,13 +159,13 @@
     "eslint-plugin-react": "3.3.1",
     "portfinder": "0.4.0"
   },
-  "gitHead": "a769f91ccf008ff1deca3ab490e23cd6bb518fdf",
+  "gitHead": "7f68a350ff5e3a05c2cc01503cacf3203359f178",
   "bugs": {
     "url": "https://github.com/facebook/react-native/issues"
   },
   "homepage": "https://github.com/facebook/react-native",
-  "_id": "react-native@0.19.0",
-  "_shasum": "8f07553727bd5b90d2ac1f6fe6c0a5f140836de0",
+  "_id": "react-native@0.21.0",
+  "_shasum": "c9e7f08d724452ba710c796c4467c6c515de1cb9",
   "_from": "react-native@latest",
   "_npmVersion": "2.7.1",
   "_nodeVersion": "4.2.1",
@@ -196,13 +174,17 @@
     "email": "martin.konicek@gmail.com"
   },
   "dist": {
-    "shasum": "8f07553727bd5b90d2ac1f6fe6c0a5f140836de0",
-    "tarball": "http://registry.npmjs.org/react-native/-/react-native-0.19.0.tgz"
+    "shasum": "c9e7f08d724452ba710c796c4467c6c515de1cb9",
+    "tarball": "http://registry.npmjs.org/react-native/-/react-native-0.21.0.tgz"
   },
   "maintainers": [
     {
       "name": "amasad",
       "email": "amjad.masad@gmail.com"
+    },
+    {
+      "name": "bestander",
+      "email": "bestander@gmail.com"
     },
     {
       "name": "brentvatne",
@@ -241,7 +223,10 @@
       "email": "vjeuxx@gmail.com"
     }
   ],
+  "_npmOperationalInternal": {
+    "host": "packages-6-west.internal.npmjs.com",
+    "tmp": "tmp/react-native-0.21.0.tgz_1456847563286_0.8639392114710063"
+  },
   "directories": {},
-  "_resolved": "https://registry.npmjs.org/react-native/-/react-native-0.19.0.tgz",
-  "readme": "ERROR: No README data found!"
+  "_resolved": "https://registry.npmjs.org/react-native/-/react-native-0.21.0.tgz"
 }

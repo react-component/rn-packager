@@ -60,15 +60,19 @@ const getDependenciesValidateOpts = declareOpts({
     type: 'string',
     required: false,
   },
-  isUnbundle: {
+  unbundle: {
     type: 'boolean',
     default: false
   },
-  // @Denis
+  recursive: {
+    type: 'boolean',
+    default: true,
+  },
+    // @Denis
   includeFramework: {
     type: 'boolean',
     default: false
-  }  
+  }
 });
 
 class Resolver {
@@ -94,7 +98,6 @@ class Resolver {
         // should work after this release and we can
         // remove it from here.
         'parse',
-        'react-transform-hmr',
       ],
       platforms: ['ios', 'android'],
       preferNativePlatform: true,
@@ -104,6 +107,11 @@ class Resolver {
     });
 
     this._polyfillModuleNames = opts.polyfillModuleNames || [];
+
+    this._depGraph.load().catch(err => {
+      console.error(err.message + '\n' + err.stack);
+      process.exit(1);
+    });
   }
 
   getShallowDependencies(entryFile) {
@@ -111,7 +119,7 @@ class Resolver {
   }
 
   stat(filePath) {
-    return this._depGraph.stat(filePath);
+    return this._depGraph.getFS().stat(filePath);
   }
 
   getModuleForPath(entryFile) {
@@ -121,16 +129,19 @@ class Resolver {
   getDependencies(main, options) {
     const opts = getDependenciesValidateOpts(options);
 
-    // @Denis
-    return this._depGraph.getDependencies(main, opts.platform, opts.includeFramework).then(
-      resolutionResponse => {
-        this._getPolyfillDependencies(opts.includeFramework).reverse().forEach(
-          polyfill => resolutionResponse.prependDependency(polyfill)
-        );
+    return this._depGraph.getDependencies(
+      main,
+      opts.platform,
+      opts.includeFramework,  // @Denis
+      opts.recursive,
+    ).then(resolutionResponse => {
+      // @Denis
+      this._getPolyfillDependencies(opts.includeFramework).reverse().forEach(
+        polyfill => resolutionResponse.prependDependency(polyfill)
+      );
 
-        return resolutionResponse.finalize();
-      }
-    );
+      return resolutionResponse.finalize();
+    });
   }
 
   getModuleSystemDependencies(options) {
@@ -140,10 +151,9 @@ class Resolver {
         ? path.join(__dirname, 'polyfills/prelude_dev.js')
         : path.join(__dirname, 'polyfills/prelude.js');
 
-    const moduleSystem = opts.isUnbundle
+    const moduleSystem = opts.unbundle
         ? path.join(__dirname, 'polyfills/require-unbundle.js')
         : path.join(__dirname, 'polyfills/require.js');
-
     // @Denis
     if (!opts.includeFramework) {
       return [];
@@ -169,14 +179,13 @@ class Resolver {
       path.join(__dirname, 'polyfills/String.prototype.es6.js'),
       path.join(__dirname, 'polyfills/Array.prototype.es6.js'),
       path.join(__dirname, 'polyfills/Array.es6.js'),
+      path.join(__dirname, 'polyfills/Object.es7.js'),
       path.join(__dirname, 'polyfills/babelHelpers.js'),
     ].concat(this._polyfillModuleNames);
-
     // @Denis 如果只打业务包，不需要打入polyfill
     if (!includeFramework) {
       polyfillModuleNames = [];
     }
-    
     return polyfillModuleNames.map(
       (polyfillModuleName, idx) => new Polyfill({
         path: polyfillModuleName,
@@ -231,7 +240,9 @@ class Resolver {
 
   wrapModule(resolutionResponse, module, code) {
     if (module.isPolyfill()) {
-      return Promise.resolve({code});
+      return Promise.resolve({
+        code: definePolyfillCode(code),
+      });
     }
 
     return this.resolveRequires(resolutionResponse, module, code).then(
@@ -253,6 +264,14 @@ function defineModuleCode(moduleName, code) {
     'function(global, require, module, exports) {',
     `  ${code}`,
     '\n});',
+  ].join('');
+}
+
+function definePolyfillCode(code) {
+  return [
+    '(function(global) {',
+    code,
+    `\n})(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : this);`,
   ].join('');
 }
 

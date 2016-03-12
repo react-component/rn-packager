@@ -12,6 +12,7 @@
 require('../../packager/babelRegisterOnly')([
   /local-cli/
 ]);
+
 // @Denis
 const Config = require('../util/Config');
 const defaultConfig = require('../default.config');
@@ -44,7 +45,7 @@ function bundle(argv, config) {
     }
     argv = args;
     config = Config.get(__dirname, defaultConfig);
-  }  
+  }
   return bundleWithOutput(argv, config);
 }
 

@@ -18,10 +18,6 @@ module.exports = [
     command: 'platform',
     description: 'Either "ios" or "android"',
     type: 'string',
-  }, {  // @Denis 是否集成框架
-    command: 'include-framework',
-    description: 'Whether to bundle include module `react-native` and polyfills',
-    default: false,
   }, {
     command: 'transformer',
     description: 'Specify a custom transformer to be used (absolute path)',
@@ -60,6 +56,10 @@ module.exports = [
   }, {
     command: 'verbose',
     description: 'Enables logging',
+    default: false,
+  }, {  // @Denis 是否集成框架
+    command: 'include-framework',
+    description: 'Whether to bundle include module `react-native` and polyfills',
     default: false,
   }, { // @Denis 增加runBeforeMainModule
     command: 'runBeforeMainModule',

@@ -17,6 +17,8 @@ const Promise = require('promise');
 // @Denis 获取react-native自带的依赖组件
 const dependencies = require('../../../../../package.json').dependencies;
 
+// 获取模块黑名单
+const blacklist = require(process.cwd() + '/node_modules/rn-core/blacklist');
 
 class ResolutionRequest {
   constructor({
@@ -107,8 +109,9 @@ class ResolutionRequest {
       return null;
     };
 
-    // @Denis 如果是依赖modules里依赖了react-native, 也走这个逻辑
-    if (toModuleName.split('/')[0] === 'react-native' || (!this._helpers.isNodeModulesDir(fromModule.path)
+    // @Denis 如果toModuleName是黑名单成员, 也走这个逻辑
+    if (blacklist.indexOf(toModuleName) > -1 || 
+      (!this._helpers.isNodeModulesDir(fromModule.path)
         && toModuleName[0] !== '.' &&
         toModuleName[0] !== '/')) {
       return this._tryResolve(
@@ -126,44 +129,40 @@ class ResolutionRequest {
         forgive,
       );
   }
-
-  getOrderedDependencies(response, mocksPattern) {
-    return this._getAllMocks(mocksPattern).then(mocks => {
-      response.setMocks(mocks);
-
+  getOrderedDependencies(response, mocksPattern, recursive = true) {
+    const self = this;
+    return this._getAllMocks(mocksPattern).then(allMocks => {
       const entry = this._moduleCache.getModule(this._entryPath);
+      const mocks = Object.create(null);
       const visited = Object.create(null);
       visited[entry.hash()] = true;
 
-      console.log("依赖模块路径: ")
+      response.pushDependency(entry);
+      // @Denis
+      console.log("依赖模块路径: ");
       const collect = (mod) => {
         console.log("> ", mod.path);
-        // @Denis 跳过框架 框架子模块及框架依赖的模块打包 比如 react-timer-mixin
-        if (!this._includeFramework && /\/rn-core\//.test(mod.path)) {
-          return;
-        }
-        // 不再打包与react-native依赖重名不同路径的模块
-        if(this._whiteDependencies[mod.path] === 'disable') {
-          return;
-        }
-        // 只打业务包的时候，不再打包与react-native依赖重名的模块
-        if (!this._includeFramework && this._whiteDependencies[mod.path] === 'enable') {
-          return;
-        }
-        response.pushDependency(mod);
         return mod.getDependencies().then(
           depNames => Promise.all(
             depNames.map(name => this.resolveDependency(mod, name))
           ).then((dependencies) => [depNames, dependencies])
         ).then(([depNames, dependencies]) => {
-          if (mocks) {
-            return mod.getName().then(name => {
-              if (mocks[name]) {
-                const mockModule =
-                  this._moduleCache.getModule(mocks[name]);
-                depNames.push(name);
-                dependencies.push(mockModule);
-              }
+          if (allMocks) {
+            const list = [mod.getName()];
+            const pkg = mod.getPackage();
+            if (pkg) {
+              list.push(pkg.getName());
+            }
+            return Promise.all(list).then(names => {
+              names.forEach(name => {
+                if (allMocks[name] && !mocks[name]) {
+                  const mockModule =
+                    this._moduleCache.getModule(allMocks[name]);
+                  depNames.push(name);
+                  dependencies.push(mockModule);
+                  mocks[name] = allMocks[name];
+                }
+              });
               return [depNames, dependencies];
             });
           }
@@ -173,14 +172,26 @@ class ResolutionRequest {
           const filteredPairs = [];
 
           dependencies.forEach((modDep, i) => {
+            // @Denis 跳过rn-core下的模块
+            if (!self._includeFramework && /\/rn-core\//.test(modDep.path)) {
+              return;
+            }
+            // 不再打包与react-native依赖重名，但路径不同的模块。比如 react-timer-mixin
+            if(self._whiteDependencies[modDep.path] === 'disable') {
+              return;
+            }
+            if (!self._includeFramework && self._whiteDependencies[modDep.path] === 'enable') {
+              return;
+            }
             const name = depNames[i];
             if (modDep == null) {
               // It is possible to require mocks that don't have a real
               // module backing them. If a dependency cannot be found but there
               // exists a mock with the desired ID, resolve it and add it as
               // a dependency.
-              if (mocks && mocks[name]) {
-                const mockModule = this._moduleCache.getModule(mocks[name]);
+              if (allMocks && allMocks[name] && !mocks[name]) {
+                const mockModule = this._moduleCache.getModule(allMocks[name]);
+                mocks[name] = allMocks[name];
                 return filteredPairs.push([name, mockModule]);
               }
 
@@ -200,7 +211,10 @@ class ResolutionRequest {
             p = p.then(() => {
               if (!visited[modDep.hash()]) {
                 visited[modDep.hash()] = true;
-                return collect(modDep);
+                response.pushDependency(modDep);
+                if (recursive) {
+                  return collect(modDep);
+                }
               }
               return null;
             });
@@ -209,26 +223,9 @@ class ResolutionRequest {
           return p;
         });
       };
-
-      return collect(entry);
+      
+      return collect(entry).then(() => response.setMocks(mocks));
     });
-  }
-
-  getAsyncDependencies(response) {
-    return Promise.resolve().then(() => {
-      const mod = this._moduleCache.getModule(this._entryPath);
-      return mod.getAsyncDependencies().then(bundles =>
-        Promise
-          .all(bundles.map(bundle =>
-            Promise.all(bundle.map(
-              dep => this.resolveDependency(mod, dep)
-            ))
-          ))
-          .then(bs => bs.map(bundle => bundle.map(dep => dep.path)))
-      );
-    }).then(asyncDependencies => asyncDependencies.forEach(
-      (dependency) => response.pushAsyncDependency(dependency)
-    ));
   }
 
   _getAllMocks(pattern) {
@@ -302,24 +299,33 @@ class ResolutionRequest {
     });
   }
 
+  _resolveFileOrDir(fromModule, toModuleName) {
+    const potentialModulePath = isAbsolutePath(toModuleName) ?
+        toModuleName :
+        path.join(path.dirname(fromModule.path), toModuleName);
+
+    return this._redirectRequire(fromModule, potentialModulePath).then(
+      realModuleName => this._tryResolve(
+        () => this._loadAsFile(realModuleName, fromModule, toModuleName),
+        () => this._loadAsDir(realModuleName, fromModule, toModuleName)
+      )
+    );
+  }
+
   _resolveNodeDependency(fromModule, toModuleName) {
     if (toModuleName[0] === '.' || toModuleName[1] === '/') {
-      const potentialModulePath = isAbsolutePath(toModuleName) ?
-              toModuleName :
-              path.join(path.dirname(fromModule.path), toModuleName);
-      return this._redirectRequire(fromModule, potentialModulePath).then(
-        realModuleName => this._tryResolve(
-          () => this._loadAsFile(realModuleName, fromModule, toModuleName),
-          () => this._loadAsDir(realModuleName, fromModule, toModuleName)
-        )
-      );
+      return this._resolveFileOrDir(fromModule, toModuleName);
     } else {
       return this._redirectRequire(fromModule, toModuleName).then(
         realModuleName => {
-          // @Denis 业务包不包含react-native
-          // if (realModuleName === 'react-native' && !this._includeFramework) {
-          //   return Promise.resolve();
-          // }  
+          if (realModuleName[0] === '.' || realModuleName[1] === '/') {
+            // derive absolute path /.../node_modules/fromModuleDir/realModuleName
+            const fromModuleParentIdx = fromModule.path.lastIndexOf('node_modules/') + 13;
+            const fromModuleDir = fromModule.path.slice(0, fromModule.path.indexOf('/', fromModuleParentIdx));
+            const absPath = path.join(fromModuleDir, realModuleName);
+            return this._resolveFileOrDir(fromModule, absPath);
+          }
+
           const searchQueue = [];
           for (let currDir = path.dirname(fromModule.path);
                currDir !== path.parse(fromModule.path).root;
@@ -392,8 +398,6 @@ class ResolutionRequest {
         file = potentialModulePath + '.native.js';
       } else if (this._fastfs.fileExists(potentialModulePath + '.js')) {
         file = potentialModulePath + '.js';
-      } else if (this._fastfs.fileExists(potentialModulePath + '.jsx')) {
-        file = potentialModulePath + '.jsx';
       } else if (this._fastfs.fileExists(potentialModulePath + '.json')) {
         file = potentialModulePath + '.json';
       } else {
@@ -414,7 +418,13 @@ class ResolutionRequest {
         throw new UnableToResolveError(
           fromModule,
           toModule,
-          `Invalid directory ${potentialDirPath}`,
+`Unable to find this module in its module map or any of the node_modules directories under ${potentialDirPath} and its parent directories
+
+This might be related to https://github.com/facebook/react-native/issues/4968
+To resolve try the following:
+  1. Clear watchman watches: \`watchman watch-del-all\`.
+  2. Delete the \`node_modules\` folder: \`rm -rf node_modules && npm install\`.
+  3. Reset packager cache: \`rm -fr $TMPDIR/react-*\` or \`npm start -- --reset-cache\`.`,
         );
       }
 

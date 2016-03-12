@@ -37,8 +37,8 @@ function buildBundle(args, config, output = outputBundle) {
       dev: args.dev,
       minify: !args.dev,
       platform: args.platform,
-      runBeforeMainModule: args.runBeforeMainModule, // @Denis
-      includeFramework: args['include-framework']  // @Denis
+      runBeforeMainModule: args.runBeforeMainModule,  // @Denis
+      includeFramework: args['include-framework'],    // @Denis
     };
 
     const clientPromise = ReactPackager.createClientFor(options);
