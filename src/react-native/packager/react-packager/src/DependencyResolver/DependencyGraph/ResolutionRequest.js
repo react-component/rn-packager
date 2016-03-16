@@ -10,6 +10,7 @@
 
 const debug = require('debug')('ReactNativePackager:DependencyGraph');
 const util = require('util');
+const fs = require('fs'); // @Denis
 const path = require('path');
 const isAbsolutePath = require('absolute-path');
 const getAssetDataFromName = require('../lib/getAssetDataFromName');
@@ -17,6 +18,14 @@ const Promise = require('promise');
 // @Denis 获取react-native自带的依赖组件
 const dependencies = require('../../../../../package.json').dependencies;
 
+let coreModulesList = [];
+// @Denis 获取模块名单
+if (fs.existsSync(path.join(process.cwd(), 'coreModulesList.js'))) {
+  coreModulesList = require(process.cwd() + '/coreModulesList');
+} else {
+  coreModulesList = require(process.cwd() + '/node_modules/rn-core/coreModulesList');
+}
+// console.log("coreModulesList", coreModulesList);
 
 class ResolutionRequest {
   constructor({
@@ -107,8 +116,9 @@ class ResolutionRequest {
       return null;
     };
 
-    // @Denis 如果是依赖modules里依赖了react-native, 也走这个逻辑
-    if (toModuleName.split('/')[0] === 'react-native' || (!this._helpers.isNodeModulesDir(fromModule.path)
+    // @Denis 分析多级依赖时的模块名称，coreModulesList中的模块，都走这个逻辑
+    if (coreModulesList.indexOf(toModuleName.split('/')[0]) > -1 || 
+      (!this._helpers.isNodeModulesDir(fromModule.path)
         && toModuleName[0] !== '.' &&
         toModuleName[0] !== '/')) {
       return this._tryResolve(
