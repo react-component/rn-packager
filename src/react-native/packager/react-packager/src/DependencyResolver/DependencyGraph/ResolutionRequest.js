@@ -11,14 +11,21 @@
 const debug = require('debug')('ReactNativePackager:DependencyGraph');
 const util = require('util');
 const path = require('path');
+const fs = require('fs'); // @Denis
 const isAbsolutePath = require('absolute-path');
 const getAssetDataFromName = require('../lib/getAssetDataFromName');
 const Promise = require('promise');
 // @Denis 获取react-native自带的依赖组件
 const coreDependencies = require(process.cwd() + '/node_modules/rn-core/package.json').dependencies;
-// @Denis 获取模块黑名单
-const coreBlacklist = require(process.cwd() + '/node_modules/rn-core/blacklist');
 
+let coreModulesList = [];
+// @Denis 获取模块名单
+if (fs.existsSync(path.join(process.cwd(), 'coreModulesList.js'))) {
+  coreModulesList = require(process.cwd() + '/coreModulesList');
+} else {
+  coreModulesList = require(process.cwd() + '/node_modules/rn-core/coreModulesList');
+}
+console.log("coreModulesList", coreModulesList);
 class ResolutionRequest {
   constructor({
     platform,
@@ -109,7 +116,7 @@ class ResolutionRequest {
     };
 
     // @Denis 分析多级依赖时的模块名称，符合黑名单中的模块，都走这个逻辑
-    if (coreBlacklist.indexOf(toModuleName.split('/')[0]) > -1 || 
+    if (coreModulesList.indexOf(toModuleName.split('/')[0]) > -1 || 
       (!this._helpers.isNodeModulesDir(fromModule.path)
         && toModuleName[0] !== '.' &&
         toModuleName[0] !== '/')) {
