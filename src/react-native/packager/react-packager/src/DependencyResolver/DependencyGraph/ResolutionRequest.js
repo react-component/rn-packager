@@ -15,10 +15,9 @@ const isAbsolutePath = require('absolute-path');
 const getAssetDataFromName = require('../lib/getAssetDataFromName');
 const Promise = require('promise');
 // @Denis 获取react-native自带的依赖组件
-const dependencies = require('../../../../../package.json').dependencies;
-
-// 获取模块黑名单
-const blacklist = require(process.cwd() + '/node_modules/rn-core/blacklist');
+const coreDependencies = require(process.cwd() + '/node_modules/rn-core/package.json').dependencies;
+// @Denis 获取模块黑名单
+const coreBlacklist = require(process.cwd() + '/node_modules/rn-core/blacklist');
 
 class ResolutionRequest {
   constructor({
@@ -76,8 +75,8 @@ class ResolutionRequest {
     }
 
     const cacheResult = (result) => {
-      // @Denis 记录工程插件白名单
-      if (dependencies[toModuleName]) {
+      // @Denis 标记核心框架依赖模块
+      if (coreDependencies[toModuleName]) {
         if (this._whiteResolvedDependencies[toModuleName]) {
           if(!this._whiteDependencies[result.path]) {
             console.log('Disable module:', toModuleName, ' path: ', result.path);
@@ -109,8 +108,8 @@ class ResolutionRequest {
       return null;
     };
 
-    // @Denis 如果toModuleName是黑名单成员, 也走这个逻辑
-    if (blacklist.indexOf(toModuleName) > -1 || 
+    // @Denis 分析多级依赖时的模块名称，符合黑名单中的模块，都走这个逻辑
+    if (coreBlacklist.indexOf(toModuleName.split('/')[0]) > -1 || 
       (!this._helpers.isNodeModulesDir(fromModule.path)
         && toModuleName[0] !== '.' &&
         toModuleName[0] !== '/')) {
@@ -139,9 +138,9 @@ class ResolutionRequest {
 
       response.pushDependency(entry);
       // @Denis
-      console.log("依赖模块路径: ");
+      // console.log("依赖模块路径: ");
       const collect = (mod) => {
-        console.log("> ", mod.path);
+        // console.log("> ", mod.path);
         return mod.getDependencies().then(
           depNames => Promise.all(
             depNames.map(name => this.resolveDependency(mod, name))
