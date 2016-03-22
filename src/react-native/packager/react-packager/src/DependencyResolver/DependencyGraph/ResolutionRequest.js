@@ -25,7 +25,7 @@ if (fs.existsSync(path.join(process.cwd(), 'coreModulesList.js'))) {
 } else {
   coreModulesList = require(process.cwd() + '/node_modules/rn-core/coreModulesList');
 }
-console.log("coreModulesList", coreModulesList);
+
 class ResolutionRequest {
   constructor({
     platform,
@@ -86,12 +86,12 @@ class ResolutionRequest {
       if (coreDependencies[toModuleName]) {
         if (this._whiteResolvedDependencies[toModuleName]) {
           if(!this._whiteDependencies[result.path]) {
-            console.log('Disable module:', toModuleName, ' path: ', result.path);
+            // console.log('Disable module:', toModuleName, ' path: ', result.path);
             this._whiteDependencies[result.path] = 'disable';
           }
         } else {
           this._whiteResolvedDependencies[toModuleName] = true;
-          console.log('Enable module: ', toModuleName, ' path: ', result.path);
+          // console.log('Enable module: ', toModuleName, ' path: ', result.path);
           this._whiteDependencies[result.path] = 'enable';
         }
       }
@@ -145,9 +145,9 @@ class ResolutionRequest {
 
       response.pushDependency(entry);
       // @Denis
-      // console.log("依赖模块路径: ");
+      console.log("分析依赖模块路径(实际打包的模块): ");
       const collect = (mod) => {
-        // console.log("> ", mod.path);
+        console.log("> ", mod.path);
         return mod.getDependencies().then(
           depNames => Promise.all(
             depNames.map(name => this.resolveDependency(mod, name))
@@ -178,17 +178,6 @@ class ResolutionRequest {
           const filteredPairs = [];
 
           dependencies.forEach((modDep, i) => {
-            // @Denis 跳过rn-core下的模块
-            if (!self._includeFramework && /\/rn-core\//.test(modDep.path)) {
-              return;
-            }
-            // 不再打包与react-native依赖重名，但路径不同的模块。比如 react-timer-mixin
-            if(self._whiteDependencies[modDep.path] === 'disable') {
-              return;
-            }
-            if (!self._includeFramework && self._whiteDependencies[modDep.path] === 'enable') {
-              return;
-            }
             const name = depNames[i];
             if (modDep == null) {
               // It is possible to require mocks that don't have a real
@@ -217,6 +206,20 @@ class ResolutionRequest {
             p = p.then(() => {
               if (!visited[modDep.hash()]) {
                 visited[modDep.hash()] = true;
+
+                // @Denis 跳过rn-core下的模块
+                if (!self._includeFramework && /\/rn-core\//.test(modDep.path)) {
+                  return null;
+                }
+                // 不再打包与react-native依赖重名，但路径不同的模块。比如 react-timer-mixin
+                if(self._whiteDependencies[modDep.path] === 'disable') {
+                  return null;
+                }
+                // 只打业务包的时候，不再打包与react-native依赖重名的模块
+                if (!self._includeFramework && self._whiteDependencies[modDep.path] === 'enable') {
+                  return null;
+                }
+
                 response.pushDependency(modDep);
                 if (recursive) {
                   return collect(modDep);
