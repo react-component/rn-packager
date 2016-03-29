@@ -112,7 +112,7 @@ const bundleOpts = declareOpts({
     type: 'array',
     default: [
       // Ensures essential globals are available and are patched correctly.
-      'InitializeJavaScriptAppEngine'
+      // 'InitializeJavaScriptAppEngine' @Denis 后续在打包时加上
     ],
   },
   unbundle: {
@@ -228,8 +228,11 @@ class Server {
       if (!options.platform) {
         options.platform = getPlatformExtension(options.entryFile);
       }
-
       const opts = bundleOpts(options);
+      // @Denis 业务代码不需要 InitializeJavaScriptAppEngine
+      if (opts.includeFramework) {
+        opts.runBeforeMainModule.unshift('InitializeJavaScriptAppEngine');
+      }
       return this._bundler.bundle(opts);
     });
   }

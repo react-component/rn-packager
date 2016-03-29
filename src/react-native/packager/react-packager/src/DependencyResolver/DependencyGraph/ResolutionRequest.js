@@ -16,7 +16,7 @@ const isAbsolutePath = require('absolute-path');
 const getAssetDataFromName = require('../lib/getAssetDataFromName');
 const Promise = require('promise');
 // @Denis 获取react-native自带的依赖组件
-const coreDependencies = require(process.cwd() + '/node_modules/rn-core/package.json').dependencies;
+// const coreDependencies = require(process.cwd() + '/node_modules/rn-core/package.json').dependencies;
 
 let coreModulesList = [];
 // @Denis 获取模块名单
@@ -51,8 +51,9 @@ class ResolutionRequest {
     this._shouldThrowOnUnresolvedErrors = shouldThrowOnUnresolvedErrors;
     this._resetResolutionCache();
     // @Denis
-    this._whiteResolvedDependencies = {};
-    this._whiteDependencies = {};
+    this._depModules = []; // 存放打包模块名称
+    // this._whiteResolvedDependencies = {};
+    // this._whiteDependencies = {};
   }
 
   _tryResolve(action, secondaryAction) {
@@ -83,18 +84,18 @@ class ResolutionRequest {
 
     const cacheResult = (result) => {
       // @Denis 标记核心框架依赖模块
-      if (coreDependencies[toModuleName]) {
-        if (this._whiteResolvedDependencies[toModuleName]) {
-          if(!this._whiteDependencies[result.path]) {
-            // console.log('Disable module:', toModuleName, ' path: ', result.path);
-            this._whiteDependencies[result.path] = 'disable';
-          }
-        } else {
-          this._whiteResolvedDependencies[toModuleName] = true;
-          // console.log('Enable module: ', toModuleName, ' path: ', result.path);
-          this._whiteDependencies[result.path] = 'enable';
-        }
-      }
+      // if (coreDependencies[toModuleName]) {
+      //   if (this._whiteResolvedDependencies[toModuleName]) {
+      //     if(!this._whiteDependencies[result.path]) {
+      //       // console.log('Disable module:', toModuleName, ' path: ', result.path);
+      //       this._whiteDependencies[result.path] = 'disable';
+      //     }
+      //   } else {
+      //     this._whiteResolvedDependencies[toModuleName] = true;
+      //     // console.log('Enable module: ', toModuleName, ' path: ', result.path);
+      //     this._whiteDependencies[result.path] = 'enable';
+      //   }
+      // }
       this._immediateResolutionCache[resHash] = result;
       return result;
     };
@@ -116,7 +117,8 @@ class ResolutionRequest {
     };
 
     // @Denis 分析多级依赖时的模块名称，符合黑名单中的模块，都走这个逻辑
-    if (coreModulesList.indexOf(toModuleName.split('/')[0]) > -1 || 
+    if ((!this._includeFramework 
+        && coreModulesList.indexOf(toModuleName.split('/')[0]) > -1) || 
       (!this._helpers.isNodeModulesDir(fromModule.path)
         && toModuleName[0] !== '.' &&
         toModuleName[0] !== '/')) {
@@ -207,18 +209,29 @@ class ResolutionRequest {
               if (!visited[modDep.hash()]) {
                 visited[modDep.hash()] = true;
 
-                // @Denis 跳过rn-core下的模块
+                // @Denis 业务打包时，跳过rn-core下的框架模块
                 if (!self._includeFramework && /\/rn-core\//.test(modDep.path)) {
                   return null;
                 }
+                // @Denis 业务打包时，跳过 coreModulesList 内的模块
+                if (!self._includeFramework && coreModulesList.indexOf(depName) > -1) {
+                  return null;
+                }
+                // @Denis 记录已经加入dep的模块名，防止同名不同路径的模块重复打入
+                if (this._depModules.indexOf(depName) > -1) {
+                  return null;
+                } else {
+                  this._depModules.push(depName);
+                }
+
                 // 不再打包与react-native依赖重名，但路径不同的模块。比如 react-timer-mixin
-                if(self._whiteDependencies[modDep.path] === 'disable') {
-                  return null;
-                }
+                // if(self._whiteDependencies[modDep.path] === 'disable') {
+                //   return null;
+                // }
                 // 只打业务包的时候，不再打包与react-native依赖重名的模块
-                if (!self._includeFramework && self._whiteDependencies[modDep.path] === 'enable') {
-                  return null;
-                }
+                // if (!self._includeFramework && self._whiteDependencies[modDep.path] === 'enable') {
+                //   return null;
+                // }
 
                 response.pushDependency(modDep);
                 if (recursive) {
