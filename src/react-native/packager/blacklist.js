@@ -78,7 +78,7 @@ var sharedBlacklist = [
   /[/\\]node_modules[/\\]react-native[/\\].*/,
   /[/\\]spm_modules[/\\].*/,
   /[/\\]rn-tools[/\\].*/,
-  'rn-packager/src/react-native/package.json',
+  /[/\\]rn-packager[/\\]src[/\\]react-native[/\\].*/,
 ];
 
 var platformBlacklists = {
