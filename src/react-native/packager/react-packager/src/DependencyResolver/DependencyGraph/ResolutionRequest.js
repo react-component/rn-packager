@@ -210,9 +210,9 @@ class ResolutionRequest {
                 visited[modDep.hash()] = true;
 
                 // @Denis 业务打包时，跳过rn-core下的框架模块
-                if (!self._includeFramework && /\/rn-core\//.test(modDep.path)) {
-                  return null;
-                }
+                // if (!self._includeFramework && /\/rn-core\//.test(modDep.path)) {
+                //   return null;
+                // }
                 // @Denis 业务打包时，跳过 coreModulesList 内的模块
                 if (!self._includeFramework && coreModulesList.indexOf(depName) > -1) {
                   return null;
@@ -223,7 +223,6 @@ class ResolutionRequest {
                 } else {
                   this._depModules.push(depName);
                 }
-
                 // 不再打包与react-native依赖重名，但路径不同的模块。比如 react-timer-mixin
                 // if(self._whiteDependencies[modDep.path] === 'disable') {
                 //   return null;
