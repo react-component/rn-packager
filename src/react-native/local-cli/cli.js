@@ -9,8 +9,9 @@
 'use strict';
 
 require('../packager/babelRegisterOnly')([
-  // /private-cli\/src/, @Denis
-  /local-cli/
+  /private-cli\/src/,
+  /local-cli/,
+  /react-packager\/src/
 ]);
 
 var bundle = require('./bundle/bundle');
@@ -41,8 +42,8 @@ gracefulFs.gracefulify(fs);
 var documentedCommands = {
   'start': [server, 'starts the webserver'],
   'bundle': [bundle, 'builds the javascript bundle for offline use'],
+  // @Denis 命令行功能调整
   'version': [versionInfo, 'print version']
-  // @Denis 暂不支持下面的功能
   // 'unbundle': [unbundle, 'builds javascript as "unbundle" for offline use'],
   // 'new-library': [library, 'generates a native library bridge'],
   // 'link': [link, 'Adds a third-party library to your project. Example: react-native link awesome-camera'],
@@ -84,7 +85,7 @@ function run() {
     printUsage();
   }
 
-  const setupEnvScript = /^win/.test(process.platform)
+  var setupEnvScript = /^win/.test(process.platform)
     ? 'setup_env.bat'
     : 'setup_env.sh';
   childProcess.execFileSync(path.join(__dirname, setupEnvScript));

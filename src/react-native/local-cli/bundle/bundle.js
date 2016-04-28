@@ -6,13 +6,11 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-'use strict';
 
 // @Denis
 require('../../packager/babelRegisterOnly')([
   /local-cli/
 ]);
-
 // @Denis
 const Config = require('../util/Config');
 const defaultConfig = require('../default.config');
@@ -26,16 +24,16 @@ const outputPrepack = require('./output/prepack');
 /**
  * Builds the bundle starting to look for dependencies at the given entry path.
  */
-function bundleWithOutput(argv, config, output) {
+function bundleWithOutput(argv, config, output, packagerInstance) {
   const args = parseCommandLine(bundleCommandLineArgs, argv);
   if (!output) {
     output = args.prepack ? outputPrepack : outputBundle;
   }
-  return buildBundle(args, config, output);
+  return buildBundle(args, config, output, packagerInstance);
 
 }
 
-function bundle(argv, config) {
+function bundle(argv, config, packagerInstance) {
   // @Denis 支持构建脚本传入object参数
   if (!argv.length) {
     var args = ['bundle'];
@@ -46,7 +44,7 @@ function bundle(argv, config) {
     argv = args;
     config = Config.get(__dirname, defaultConfig);
   }
-  return bundleWithOutput(argv, config);
+  return bundleWithOutput(argv, config, undefined, packagerInstance);
 }
 
 module.exports = bundle;

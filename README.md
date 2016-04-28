@@ -1,6 +1,6 @@
 # Packager
 
-![react-native](https://img.shields.io/badge/react--native-%3D_0.21.0-green.svg)
+![react-native](https://img.shields.io/badge/react--native-%3D_0.25.0-rc-green.svg)
 
 ## Install
 
@@ -12,10 +12,10 @@ $ npm install rn-packager -g
 
 ```
 "devDependencies": {
-  "rn-core": "~0.3.0"
+  "rn-core": "~0.4.0"
 }
 ```
-"rn-core@~0.3.0" 是 `0.21.0` 的全量sdk工程，从官方的 "react-native" 依赖中抽取了前端框架源代码。
+"rn-core@~0.4.0" 是 `0.25.0-rc` 的全量sdk工程，从官方的 "react-native" 依赖中抽取了前端框架源代码。
 
 ## rnpackager bundle
 > 在项目工程根目录下执行打包命令，默认不打包框架代码及polyfills
