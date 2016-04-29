@@ -73,12 +73,9 @@ function constantFolding(filename, transformResult) {
     filename,
     plugins: [plugin],
     inputSourceMap: transformResult.map,
-    sourceMaps: true,
-    sourceFileName: filename,
     babelrc: false,
     compact: true,
-    retainLines: true,
-  });
+  })
 }
 
 module.exports = constantFolding;

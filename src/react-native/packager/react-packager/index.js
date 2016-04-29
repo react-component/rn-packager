@@ -14,6 +14,7 @@ require('node-haste/lib/fastpath').replace();
 useGracefulFs();
 
 var debug = require('debug');
+var omit = require('underscore').omit;
 var Activity = require('./src/Activity');
 
 exports.createServer = createServer;
@@ -64,13 +65,15 @@ exports.getDependencies = function(options, bundleOptions) {
     });
 };
 
-exports.getOrderedDependencyPaths = function(options, bundleOptions) {
-  var server = createNonPersistentServer(options);
-  return server.getOrderedDependencyPaths(bundleOptions)
-    .then(function(paths) {
-      server.end();
-      return paths;
-    });
+exports.createClientFor = function(options) {
+  if (options.verbose) {
+    enableDebug();
+  }
+  startSocketInterface();
+  return (
+    require('./src/SocketInterface')
+      .getOrCreateSocketFor(omit(options, ['verbose']))
+  );
 };
 
 function useGracefulFs() {
@@ -100,6 +103,7 @@ function createServer(options) {
     enableDebug();
   }
 
+  startSocketInterface();
   var Server = require('./src/Server');
   return new Server(omit(options, ['verbose']));
 }
@@ -114,12 +118,18 @@ function createNonPersistentServer(options) {
   return createServer(options);
 }
 
-function omit(obj, blacklistedKeys) {
-  return Object.keys(obj).reduce((clone, key) => {
-    if (blacklistedKeys.indexOf(key) === -1) {
-      clone[key] = obj[key];
-    }
+// we need to listen on a socket as soon as a server is created, but only once.
+// This file also serves as entry point when spawning a socket server; in that
+// case we need to start the server immediately.
+var didStartSocketInterface = false;
+function startSocketInterface() {
+  if (didStartSocketInterface) {
+    return;
+  }
+  didStartSocketInterface = true;
+  require('./src/SocketInterface').listenOnServerMessages();
+}
 
-    return clone;
-  }, {});
+if (require.main === module) { // used as entry point
+  startSocketInterface();
 }

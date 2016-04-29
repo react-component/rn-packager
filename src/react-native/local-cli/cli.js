@@ -9,9 +9,8 @@
 'use strict';
 
 require('../packager/babelRegisterOnly')([
-  /private-cli\/src/,
-  /local-cli/,
-  /react-packager\/src/
+  // /private-cli\/src/, @Denis
+  /local-cli/
 ]);
 
 var bundle = require('./bundle/bundle');
@@ -42,8 +41,8 @@ gracefulFs.gracefulify(fs);
 var documentedCommands = {
   'start': [server, 'starts the webserver'],
   'bundle': [bundle, 'builds the javascript bundle for offline use'],
-  // @Denis 命令行功能调整
-  'version': [versionInfo, 'print version']
+  // @Denis
+  'version': [versionInfo, 'print version'],
   // 'unbundle': [unbundle, 'builds javascript as "unbundle" for offline use'],
   // 'new-library': [library, 'generates a native library bridge'],
   // 'link': [link, 'Adds a third-party library to your project. Example: react-native link awesome-camera'],

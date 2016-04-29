@@ -8,7 +8,7 @@
  */
 'use strict';
 
-var _ = require('lodash');
+var _ = require('underscore');
 var wordwrap = require('wordwrap');
 
 var HORIZONTAL_LINE = '\u2500';
@@ -45,7 +45,7 @@ var BOTTOM_RIGHT = '\u2518';
 function formatBanner(message, options) {
   options = options || {};
   _.defaults(options, {
-    chalkFunction: (fn) => fn,
+    chalkFunction: _.identity,
     width: 80,
     marginLeft: 0,
     marginRight: 0,
@@ -71,7 +71,7 @@ function formatBanner(message, options) {
 
   var left = spaces(marginLeft) + VERTICAL_LINE + spaces(paddingLeft);
   var right = spaces(paddingRight) + VERTICAL_LINE + spaces(marginRight);
-  var bodyLines = _.flattenDeep([
+  var bodyLines = _.flatten([
     arrayOf('', paddingTop),
     body.split('\n'),
     arrayOf('', paddingBottom),
@@ -88,7 +88,7 @@ function formatBanner(message, options) {
     spaces(marginRight);
   var bottom = spaces(marginLeft) + BOTTOM_LEFT + horizontalBorderLine +
     BOTTOM_RIGHT + spaces(marginRight);
-  return _.flattenDeep([top, bodyLines, bottom]).join('\n');
+  return _.flatten([top, bodyLines, bottom]).join('\n');
 }
 
 function spaces(number) {

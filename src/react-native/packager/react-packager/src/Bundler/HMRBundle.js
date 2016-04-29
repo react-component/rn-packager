@@ -8,6 +8,7 @@
  */
 'use strict';
 
+const _ = require('underscore');
 const BundleBase = require('./BundleBase');
 const ModuleTransport = require('../lib/ModuleTransport');
 
@@ -20,24 +21,30 @@ class HMRBundle extends BundleBase {
     this._sourceMappingURLs = [];
   }
 
-  addModule(resolver, response, module, moduleTransport) {
-    const code = resolver.resolveRequires(
-      response,
+  addModule(resolver, response, module, transformed) {
+    return resolver.resolveRequires(response,
       module,
-      moduleTransport.code,
-      moduleTransport.meta.dependencyOffsets,
-    );
+      transformed.code,
+    ).then(({name, code}) => {
+      const moduleTransport = new ModuleTransport({
+        code,
+        name,
+        map: transformed.map,
+        sourceCode: transformed.sourceCode,
+        sourcePath: transformed.sourcePath,
+        virtual: transformed.virtual,
+      });
 
-    super.addModule(new ModuleTransport({...moduleTransport, code}));
-    this._sourceMappingURLs.push(this._sourceMappingURLFn(moduleTransport.sourcePath));
-    this._sourceURLs.push(this._sourceURLFn(moduleTransport.sourcePath));
-    return Promise.resolve();
+      super.addModule(moduleTransport);
+      this._sourceMappingURLs.push(this._sourceMappingURLFn(moduleTransport.sourcePath));
+      this._sourceURLs.push(this._sourceURLFn(moduleTransport.sourcePath));
+    });
   }
 
-  getModulesIdsAndCode() {
+  getModulesNamesAndCode() {
     return this._modules.map(module => {
       return {
-        id: JSON.stringify(module.id),
+        name: JSON.stringify(module.name),
         code: module.code,
       };
     });

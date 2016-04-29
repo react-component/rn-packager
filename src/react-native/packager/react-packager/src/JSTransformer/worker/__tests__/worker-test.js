@@ -78,6 +78,33 @@ describe('code transformation worker:', () => {
     });
   });
 
+  it('puts an empty `moduleLocals` object on the result', done => {
+    transform.mockImplementation(
+      (_, callback) => callback(null, {code: 'arbitrary'}));
+    transformCode(transform, 'filename', 'code', {}, (_, data) => {
+      expect(data.moduleLocals).toEqual({});
+      done();
+    });
+  });
+
+  it('if a `moduleLocals` array is passed, the `moduleLocals` object is a key mirror of its items', done => {
+    transform.mockImplementation(
+      (_, callback) => callback(null, {code: 'arbitrary'}));
+    const moduleLocals =
+      ['arbitrary', 'list', 'containing', 'variable', 'names'];
+
+    transformCode(transform, 'filename', 'code', {moduleLocals}, (_, data) => {
+      expect(data.moduleLocals).toEqual({
+        arbitrary: 'arbitrary',
+        list: 'list',
+        containing: 'containing',
+        variable: 'variable',
+        names: 'names',
+      });
+      done();
+    });
+  });
+
   describe('dependency extraction:', () => {
     let code;
 
@@ -128,19 +155,21 @@ describe('code transformation worker:', () => {
   });
 
   describe('Minifications:', () => {
-    let constantFolding, inline, options;
-    let transformResult, dependencyData;
+    let constantFolding, extractDependencies, inline, minify, options;
+    let transformResult, dependencyData, moduleLocals;
     const filename = 'arbitrary/file.js';
-    const foldedCode = 'arbitrary(folded(code));';
-    const foldedMap = {version: 3, sources: ['fold.js']};
+    const foldedCode = 'arbitrary(folded(code));'
+    const foldedMap = {version: 3, sources: ['fold.js']}
 
     beforeEach(() => {
       constantFolding = require('../constant-folding')
         .mockReturnValue({code: foldedCode, map: foldedMap});
       extractDependencies = require('../extract-dependencies');
       inline = require('../inline');
+      minify = require('../minify').mockReturnValue({});
 
-      options = {minify: true};
+      moduleLocals = ['module', 'require', 'exports'];
+      options = {moduleLocals, minify: true};
       dependencyData = {
         dependencies: ['a', 'b', 'c'],
         dependencyOffsets: [100, 120, 140]
@@ -177,6 +206,19 @@ describe('code transformation worker:', () => {
       });
     });
 
+    it('passes the code obtained from `constant-folding` to `minify`', done => {
+      transformCode(transform, filename, 'code', options, () => {
+        expect(minify).toBeCalledWith(
+          filename,
+          foldedCode,
+          foldedMap,
+          dependencyData.dependencyOffsets,
+          moduleLocals
+        );
+        done();
+      });
+    });
+
     it('uses the dependencies obtained from the optimized result', done => {
       transformCode(transform, filename, 'code', options, (_, result) => {
         expect(result.dependencies).toEqual(dependencyData.dependencies);
@@ -184,10 +226,17 @@ describe('code transformation worker:', () => {
       });
     });
 
-    it('uses data produced by `constant-folding` for the result', done => {
+    it('uses data produced by `minify` for the result', done => {
+      const minifyResult = {
+        code: 'minified(code)',
+        dependencyOffsets: [10, 30, 60],
+        map: {version: 3, sources: ['minified.js']},
+        moduleLocals: {module: 'x', require: 'y', exports: 'z'},
+      };
+      minify.mockReturnValue(minifyResult);
+
       transformCode(transform, 'filename', 'code', options, (_, result) => {
-        expect(result)
-          .toEqual(objectContaining({code: foldedCode, map: foldedMap}));
+        expect(result).toEqual(objectContaining(minifyResult))
         done();
       });
     });

@@ -34,10 +34,6 @@ var config = {
 };
 
 function getRoots() {
-  var root = process.env.REACT_NATIVE_APP_ROOT;
-  if (root) {
-    return [path.resolve(root)];
-  }
   if (__dirname.match(/node_modules[\/\\]react-native[\/\\]local-cli$/)) {
     // Packager is running from node_modules.
     // This is the default case for all projects created using 'react-native init'.
@@ -46,8 +42,9 @@ function getRoots() {
      // React Native was installed using CocoaPods.
     return [path.resolve(__dirname, '../../..')];
   } else {
-    // @Denis 把当前执行目录追加为项目根目录
-    return [path.resolve(__dirname, '..'), process.cwd()];
+    // @Denis 当前执行目录为项目根目录
+    return [process.cwd()];
+    // return [path.resolve(__dirname, '..')];
   }
 }
 

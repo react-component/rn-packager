@@ -13,6 +13,12 @@ const extractDependencies = require('./extract-dependencies');
 const inline = require('./inline');
 const minify = require('./minify');
 
+function keyMirrorFromArray(array) {
+  var keyMirror = {};
+  array.forEach(key => keyMirror[key] = key);
+  return keyMirror;
+}
+
 function makeTransformParams(filename, sourceCode, options) {
   if (filename.endsWith('.json')) {
     sourceCode = 'module.exports=' + sourceCode;
@@ -22,6 +28,7 @@ function makeTransformParams(filename, sourceCode, options) {
 
 function transformCode(transform, filename, sourceCode, options, callback) {
   const params = makeTransformParams(filename, sourceCode, options.transform);
+  const moduleLocals = options.moduleLocals || [];
   const isJson = filename.endsWith('.json');
 
   transform(params, (error, transformed) => {
@@ -45,35 +52,28 @@ function transformCode(transform, filename, sourceCode, options, callback) {
       code = code.replace(/^\w+\.exports=/, '');
     }
 
-    const result = isJson || options.extern
+    const moduleLocals = options.moduleLocals || [];
+    const dependencyData = isJson || options.extern
       ? {dependencies: [], dependencyOffsets: []}
       : extractDependencies(code);
 
-    result.code = code;
-    result.map = map;
+    var result;
+    if (options.minify) {
+      result = minify(
+        filename, code, map, dependencyData.dependencyOffsets, moduleLocals);
+      result.dependencies = dependencyData.dependencies;
+    } else {
+      result = dependencyData;
+      result.code = code;
+      result.map = map;
+      result.moduleLocals = keyMirrorFromArray(moduleLocals);
+    }
 
     callback(null, result);
   });
 }
 
-exports.transformAndExtractDependencies = (
-  transform,
-  filename,
-  sourceCode,
-  options,
-  callback
-) => {
+module.exports = function(transform, filename, sourceCode, options, callback) {
   transformCode(require(transform), filename, sourceCode, options || {}, callback);
 };
-
-exports.minify = (filename, code, sourceMap, callback) => {
-  var result;
-  try {
-    result = minify(filename, code, sourceMap);
-  } catch (error) {
-    callback(error);
-  }
-  callback(null, result);
-};
-
-exports.transformCode = transformCode; // for easier testing
+module.exports.transformCode = transformCode; // for easier testing

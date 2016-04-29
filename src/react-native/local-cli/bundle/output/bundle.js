@@ -17,10 +17,14 @@ function buildBundle(packagerClient, requestOptions) {
 }
 
 function createCodeWithMap(bundle, dev) {
-  return {
-    code: bundle.getSource({dev}),
-    map: JSON.stringify(bundle.getSourceMap({dev})),
-  };
+  if (!dev) {
+    return bundle.getMinifiedSourceAndMap(dev);
+  } else {
+    return {
+      code: bundle.getSource({dev}),
+      map: JSON.stringify(bundle.getSourceMap({dev})),
+    };
+  }
 }
 
 function saveBundleAndMap(bundle, options, log) {
@@ -48,6 +52,7 @@ function saveBundleAndMap(bundle, options, log) {
     return writeBundle;
   }
 }
+
 
 exports.build = buildBundle;
 exports.save = saveBundleAndMap;

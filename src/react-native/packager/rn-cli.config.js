@@ -17,8 +17,8 @@ module.exports = {
     return this._getRoots();
   },
 
-  getBlacklistRE(platform) {
-    return blacklist(platform);
+  getBlacklistRE() {
+    return blacklist('');
   },
 
   _getRoots() {
