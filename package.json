@@ -18,7 +18,7 @@
     "url": "https://github.com/react-component/rn-packager/issues"
   },
   "scripts": {
-    "install": "cp ./patches/node-haste/lib/DependencyGraph/ResolutionRequest.js ./node_modules/node-haste/lib/DependencyGraph/ResolutionRequest.js"
+    "install": "cp -pR ./patches/ ./node_modules/"
   },
   "dependencies": {
     "absolute-path": "^0.0.0",
