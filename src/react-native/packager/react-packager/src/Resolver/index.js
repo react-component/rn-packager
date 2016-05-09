@@ -143,6 +143,7 @@ class Resolver {
       includeFramework, // @Denis
 
     }).then(resolutionResponse => {
+      // @Denis 重写输入逻辑
       console.log("分析依赖模块路径(实际打包的模块):");
       const promises = [];
       resolutionResponse.dependencies.forEach(mp => {
@@ -154,7 +155,11 @@ class Resolver {
           this._getPolyfillDependencies().reverse().forEach(
             polyfill => resolutionResponse.prependDependency(polyfill)
           );
-          names.forEach(name => console.log("> ", name));
+          for (var i = 0, l = names.length; i < l; i++) {
+            const name = names[i];
+            const module = resolutionResponse.dependencies[i];
+            console.log("> ", name, module.hash());
+          }
         } else {
           let dependencies = [];
           for (var i = 0, l = names.length; i < l; i++) {
@@ -164,7 +169,7 @@ class Resolver {
             if (coreModulesList.indexOf(name) > -1) {
               resolutionResponse._mappings[module.hash()] && delete resolutionResponse._mappings[module.hash()];
             } else {
-              console.log("> ", name);
+              console.log("> ", name, module.hash());
               dependencies.push(module);
             }
           }
