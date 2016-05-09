@@ -152,14 +152,17 @@ class Resolver {
 
       return Promise.all(promises).then((names) => {
         if (includeFramework) {
-          this._getPolyfillDependencies().reverse().forEach(
-            polyfill => resolutionResponse.prependDependency(polyfill)
-          );
           for (var i = 0, l = names.length; i < l; i++) {
             const name = names[i];
             const module = resolutionResponse.dependencies[i];
-            console.log("> ", name, module.hash());
+            console.log("> ", module.hash(), name);
           }
+          this._getPolyfillDependencies().reverse().forEach(
+            polyfill => {
+              console.log("> ", polyfill.hash());
+              resolutionResponse.prependDependency(polyfill);
+            }
+          );
         } else {
           let dependencies = [];
           for (var i = 0, l = names.length; i < l; i++) {
@@ -169,7 +172,7 @@ class Resolver {
             if (coreModulesList.indexOf(name) > -1) {
               resolutionResponse._mappings[module.hash()] && delete resolutionResponse._mappings[module.hash()];
             } else {
-              console.log("> ", name, module.hash());
+              console.log("> ", module.hash(), name);
               dependencies.push(module);
             }
           }
