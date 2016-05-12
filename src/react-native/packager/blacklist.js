@@ -75,11 +75,10 @@ var sharedBlacklist = [
   'Libraries/Relay/relay/tools/relayUnstableBatchedUpdates.js',
 
   // @Denis 忽略
-  'src/react-native/packager.json',
   /[/\\]node_modules[/\\]react-native[/\\].*/,
   /[/\\]spm_modules[/\\].*/,
+  /[/\\]rn-packager[/\\].*/,
   /[/\\]rn-tools[/\\].*/,
-  // /[/\\]rn-packager[/\\]src[/\\]react-native[/\\].*/,
 ];
 
 var platformBlacklists = {
