@@ -19,6 +19,11 @@ const inlineRequiresPlugin = require('fbjs-scripts/babel-6/inline-requires');
 const json5 = require('json5');
 const path = require('path');
 
+// @Denis
+const addModuleExports = require('babel-plugin-add-module-exports');
+const presetStage0 = require('babel-preset-stage-0');
+
+
 /**
  * Return a memoized function that checks for the existence of a
  * project level .babelrc file, and if it doesn't exist, reads the
@@ -57,6 +62,7 @@ const getBabelRC = (function() {
 
       // Require the babel-preset's listed in the default babel config
       babelRC.presets = babelRC.presets.map((preset) => require('babel-preset-' + preset));
+      babelRC.presets.push(presetStage0); // @Denis
       babelRC.plugins = resolvePlugins(babelRC.plugins);
     }
 
@@ -79,7 +85,7 @@ function buildBabelConfig(filename, options) {
   let config = Object.assign({}, babelRC, extraConfig);
 
   // Add extra plugins
-  const extraPlugins = [externalHelpersPlugin];
+  const extraPlugins = [externalHelpersPlugin, addModuleExports]; // @Denis
 
   if (options.inlineRequires) {
     extraPlugins.push(inlineRequiresPlugin);
