@@ -1,8 +1,14 @@
-# Standalone ReactNative Packager
+# ReactNative Packager
+---
 
-based on ![react-native](https://img.shields.io/badge/react--native-%3D_0.21.0-green.svg)
+Standalone ReactNative Packager without framework code.
 
-## Dependences
+![node.js](https://img.shields.io/badge/node.js-%3E=_4.0.0-green.svg?style=flat-square)
+![react-native](https://img.shields.io/badge/react--native-%3D_0.21.0-green.svg)
+
+used with https://github.com/react-component/rn-core
+
+## Dependencies
 
 ```
 "devDependencies": {
@@ -13,9 +19,9 @@ based on ![react-native](https://img.shields.io/badge/react--native-%3D_0.21.0-g
 
 "rn-core@~0.3.0" is front end code from react-native 0.21
 
-## rnpackager bundle
+## Bundle
 
-> bundle without framework code and polyfill
+bundle without framework code and polyfill
 
 ```
 $ node_modules/rn-packager/bin/rnpackager bundle --entry-file  entry/file/path.js --bundle-output out/file/path.jsbundle --platform ios
@@ -54,7 +60,7 @@ gulp.task('task', function(){
 });
 ```
 
-## Project Sample
+## Demo
 
 ```
 $ cd tests
@@ -62,7 +68,7 @@ $ npm i
 $ rnpackager start
 ```
 
-Visit:
+visit:
 
 * [http://localhost:8081/index.ios.bundle?platform=ios](http://localhost:8081/index.ios.bundle?platform=ios)
 * [http://localhost:8081/index.android.bundle?platform=android](http://localhost:8081/index.android.bundle?platform=android)
