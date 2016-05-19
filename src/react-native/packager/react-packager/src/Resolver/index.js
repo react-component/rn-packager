@@ -18,6 +18,10 @@ const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
 
 const validateOpts = declareOpts({
+  // @yiminghe add transformCode
+  transformCode: {
+    type: 'function',
+  },
   projectRoots: {
     type: 'array',
     required: true,
@@ -103,6 +107,8 @@ class Resolver {
       preferNativePlatform: true,
       fileWatcher: opts.fileWatcher,
       cache: opts.cache,
+      // @yiminghe add transformCode,
+      transformCode: opts.transformCode,
       shouldThrowOnUnresolvedErrors: (_, platform) => platform === 'ios',
     });
 

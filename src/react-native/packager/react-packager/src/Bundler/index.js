@@ -25,6 +25,9 @@ const declareOpts = require('../lib/declareOpts');
 const imageSize = require('image-size');
 const version = require('../../../../package.json').version;
 
+// @yiminghe add transformCode
+const transformer=require('../../../transformer');
+
 const sizeOf = Promise.denodeify(imageSize);
 const readFile = Promise.denodeify(fs.readFile);
 
@@ -114,6 +117,14 @@ class Bundler {
       ].join('$'),
     });
 
+   this._transformer = new Transformer({
+      projectRoots: opts.projectRoots,
+      blacklistRE: opts.blacklistRE,
+      cache: this._cache,
+      transformModulePath: opts.transformModulePath,
+      disableInternalTransforms: opts.disableInternalTransforms,
+    });
+
     this._resolver = new Resolver({
       projectRoots: opts.projectRoots,
       blacklistRE: opts.blacklistRE,
@@ -123,14 +134,15 @@ class Bundler {
       fileWatcher: opts.fileWatcher,
       assetExts: opts.assetExts,
       cache: this._cache,
-    });
-
-    this._transformer = new Transformer({
-      projectRoots: opts.projectRoots,
-      blacklistRE: opts.blacklistRE,
-      cache: this._cache,
-      transformModulePath: opts.transformModulePath,
-      disableInternalTransforms: opts.disableInternalTransforms,
+      // @yiminghe add transformCode
+      transformCode(module, code) {
+        const newCode = transformer.transform(code, module.path,{
+          projectRoots: opts.projectRoots,
+        }).code;
+        return Promise.resolve({
+          code: newCode,
+        })
+      }
     });
 
     this._projectRoots = opts.projectRoots;
