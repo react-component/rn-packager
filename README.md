@@ -1,6 +1,6 @@
-# Packager
+# Standalone ReactNative Packager
 
-![react-native](https://img.shields.io/badge/react--native-%3D_0.21.0-green.svg)
+based on ![react-native](https://img.shields.io/badge/react--native-%3D_0.21.0-green.svg)
 
 ## Dependences
 
@@ -11,17 +11,17 @@
 }
 ```
 
-"rn-packager@~0.3.0" 是兼容 `0.21.0` 的打包工具
-"rn-core@~0.3.0" 是 `0.21.0` 的全量sdk工程，从官方的 "react-native" 依赖中抽取了前端框架源代码。
+"rn-core@~0.3.0" is front end code from react-native 0.21
 
 ## rnpackager bundle
-> 在项目工程根目录下执行打包命令，默认不打包框架代码及polyfills
+
+> bundle without framework code and polyfill
 
 ```
 $ node_modules/rn-packager/bin/rnpackager bundle --entry-file  entry/file/path.js --bundle-output out/file/path.jsbundle --platform ios
 ```
 
-Options, 参数参考react-native命令，增加了参数：
+added parameters:
 
 *  --include-framework  Whether to bundle include module `react-native` and polyfills   [default: false]
 *  --runBeforeMainModule  Modules required before main module                           [default: ["InitializeJavaScriptAppEngine"]]
@@ -38,7 +38,8 @@ $ rnpackager bundle --entry-file node_modules/rn-core/react-native/Libraries/rea
 ```
 $ rnpackager start
 ```
-url请求参数新增 `framework=true` `runBeforeMainModule=[]`
+
+added query parameters: `framework=true` `runBeforeMainModule=[]`
 
 ## Programmatic API
 ```
@@ -60,6 +61,7 @@ $ cd tests
 $ npm i
 $ rnpackager start
 ```
+
 Visit:
 
 * [http://localhost:8081/index.ios.bundle?platform=ios](http://localhost:8081/index.ios.bundle?platform=ios)
