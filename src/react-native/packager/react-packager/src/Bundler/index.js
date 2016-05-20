@@ -26,12 +26,13 @@ const imageSize = require('image-size');
 const version = require('../../../../package.json').version;
 
 // @yiminghe add transformCode
-const transformer=require('../../../transformer');
+const transformer = require('../../../transformer');
 
 const sizeOf = Promise.denodeify(imageSize);
 const readFile = Promise.denodeify(fs.readFile);
 
-const noop = () => {};
+const noop = () => {
+};
 
 const validateOpts = declareOpts({
   projectRoots: {
@@ -58,7 +59,7 @@ const validateOpts = declareOpts({
     default: false,
   },
   transformModulePath: {
-    type:'string',
+    type: 'string',
     required: false,
   },
   nonPersistent: {
@@ -100,7 +101,7 @@ class Bundler {
 
     let mtime;
     try {
-      ({mtime} = fs.statSync(opts.transformModulePath));
+      ({ mtime } = fs.statSync(opts.transformModulePath));
       mtime = String(mtime.getTime());
     } catch (error) {
       mtime = '';
@@ -117,13 +118,26 @@ class Bundler {
       ].join('$'),
     });
 
-   this._transformer = new Transformer({
+    this._transformer = new Transformer({
       projectRoots: opts.projectRoots,
       blacklistRE: opts.blacklistRE,
       cache: this._cache,
       transformModulePath: opts.transformModulePath,
       disableInternalTransforms: opts.disableInternalTransforms,
     });
+
+    let needTransformForResolver;
+    let needTransformForResolverPath;
+
+    const projectRoots = opts.projectRoots;
+
+    if (projectRoots && projectRoots.length > 0) {
+      needTransformForResolverPath = path.resolve(projectRoots[0], 'resolver.config.js');
+    }
+
+    if (needTransformForResolverPath && fs.existsSync(needTransformForResolverPath)) {
+      needTransformForResolver = require(needTransformForResolverPath);
+    }
 
     this._resolver = new Resolver({
       projectRoots: opts.projectRoots,
@@ -136,12 +150,23 @@ class Bundler {
       cache: this._cache,
       // @yiminghe add transformCode
       transformCode(module, code) {
-        const newCode = transformer.transform(code, module.path,{
-          projectRoots: opts.projectRoots,
-        }).code;
-        return Promise.resolve({
-          code: newCode,
-        })
+        if (needTransformForResolver &&
+          needTransformForResolver.useTransform &&
+          needTransformForResolver.useTransform(module, code)) {
+          // console.log('');console.log('');console.log('');console.log('');
+          // console.log('transform', module.path);
+          // console.log('');console.log('');console.log('');console.log('');
+          const newCode = transformer.transform(code, module.path, {
+            projectRoots: opts.projectRoots,
+          }).code;
+          return Promise.resolve({
+            code: newCode,
+          });
+        } else {
+          return Promise.resolve({
+            code,
+          });
+        }
       }
     });
 
@@ -162,9 +187,9 @@ class Bundler {
 
   bundle(options) {
     // @Denis
-    const {dev, unbundle, platform, includeFramework} = options;
+    const { dev, unbundle, platform, includeFramework } = options;
     const moduleSystemDeps =
-      this._resolver.getModuleSystemDependencies({dev, unbundle, platform, includeFramework});  //@Denis
+      this._resolver.getModuleSystemDependencies({ dev, unbundle, platform, includeFramework });  //@Denis
     return this._bundle({
       bundle: new Bundle(options.sourceMapUrl),
       moduleSystemDeps,
@@ -257,13 +282,13 @@ class Bundler {
         response.dependencies = moduleSystemDeps.concat(response.dependencies);
       }
     };
-    const finalizeBundle = ({bundle, transformedModules, response}) =>
+    const finalizeBundle = ({ bundle, transformedModules, response }) =>
       Promise.all(
-        transformedModules.map(({module, transformed}) =>
+        transformedModules.map(({ module, transformed }) =>
           bundle.addModule(this._resolver, response, module, transformed)
         )
       ).then(() => {
-        bundle.finalize({runBeforeMainModule, runMainModule});
+        bundle.finalize({ runBeforeMainModule, runMainModule });
         return bundle;
       });
 
@@ -289,7 +314,7 @@ class Bundler {
     platform,
     includeFramework, //@Denis
   }) {
-    const onModuleTransformed = ({module, transformed, response, bundle}) => {
+    const onModuleTransformed = ({ module, transformed, response, bundle }) => {
       const deps = Object.create(null);
       const pairs = response.getResolvedDependencyPairs(module);
       if (pairs) {
@@ -302,9 +327,9 @@ class Bundler {
         bundle.addModule(name, transformed, deps, module.isPolyfill());
       });
     };
-    const finalizeBundle = ({bundle, response}) => {
-      const {mainModuleId} = response;
-      bundle.finalize({runBeforeMainModule, runMainModule, mainModuleId});
+    const finalizeBundle = ({ bundle, response }) => {
+      const { mainModuleId } = response;
+      bundle.finalize({ runBeforeMainModule, runMainModule, mainModuleId });
       return bundle;
     };
 
@@ -342,13 +367,16 @@ class Bundler {
 
       const transformEventId = Activity.startEvent('transform');
       const bar = process.stdout.isTTY
-          ? new ProgressBar('transforming [:bar] :percent :current/:total', {
-              complete: '=',
-              incomplete: ' ',
-              width: 40,
-              total: response.dependencies.length,
-            })
-          : {tick() {}};
+        ? new ProgressBar('transforming [:bar] :percent :current/:total', {
+        complete: '=',
+        incomplete: ' ',
+        width: 40,
+        total: response.dependencies.length,
+      })
+        : {
+        tick() {
+        }
+      };
       const transformPromises =
         response.dependencies.map(module =>
           this._transformModule({
@@ -360,14 +388,14 @@ class Bundler {
             hot
           }).then(transformed => {
             bar.tick();
-            onModuleTransformed({module, transformed, response, bundle});
-            return {module, transformed};
+            onModuleTransformed({ module, transformed, response, bundle });
+            return { module, transformed };
           })
         );
       return Promise.all(transformPromises).then(transformedModules => {
         Activity.endEvent(transformEventId);
         return Promise
-          .resolve(finalizeBundle({bundle, transformedModules, response}))
+          .resolve(finalizeBundle({ bundle, transformedModules, response }))
           .then(() => bundle);
       });
     });
@@ -376,7 +404,7 @@ class Bundler {
   invalidateFile(filePath) {
     if (this._transformOptionsModule) {
       this._transformOptionsModule.onFileChange &&
-        this._transformOptionsModule.onFileChange();
+      this._transformOptionsModule.onFileChange();
     }
 
     this._transformer.invalidateFile(filePath);
@@ -393,6 +421,7 @@ class Bundler {
   getModuleForPath(entryFile) {
     return this._resolver.getModuleForPath(entryFile);
   }
+
   // @Denis
   getDependencies(main, isDev, platform, includeFramework, recursive = true) {
     return this._resolver.getDependencies(
@@ -462,7 +491,7 @@ class Bundler {
           dev: dev,
           modulePath: module.path,
         },
-        {hot},
+        { hot },
       ).then(options => {
         return this._transformer.loadFileAndTransform(
           path.resolve(module.path),
@@ -515,13 +544,13 @@ class Bundler {
     // Test extension against all types supported by image-size module.
     // If it's not one of these, we won't treat it as an image.
     let isImage = [
-      'png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'psd', 'svg', 'tiff'
-    ].indexOf(path.extname(module.path).slice(1)) !== -1;
+        'png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'psd', 'svg', 'tiff'
+      ].indexOf(path.extname(module.path).slice(1)) !== -1;
 
     return Promise.all([
       isImage ? sizeOf(module.path) : null,
       this._assetServer.getAssetData(relPath, platform),
-    ]).then(function(res) {
+    ]).then(function (res) {
       const dimensions = res[0];
       const assetData = res[1];
       const asset = {
@@ -540,13 +569,13 @@ class Bundler {
       const ASSET_TEMPLATE = 'module.exports = require("AssetRegistry").registerAsset(%json);';
       const code = ASSET_TEMPLATE.replace('%json', JSON.stringify(asset));
 
-      return {asset, code};
+      return { asset, code };
     });
   }
 
 
   _generateAssetModule(bundle, module, platform = null) {
-    return this._generateAssetObjAndCode(module, platform).then(({asset, code}) => {
+    return this._generateAssetObjAndCode(module, platform).then(({ asset, code }) => {
       bundle.addAsset(asset);
       return new ModuleTransport({
         code: code,
@@ -560,23 +589,23 @@ class Bundler {
   _getTransformOptions(config, options) {
     const transformerOptions = this._transformOptionsModule
       ? this._transformOptionsModule.get(Object.assign(
-          {
-            bundler: this,
-            platform: options.platform,
-            dev: options.dev,
-          },
-          config,
-        ))
+      {
+        bundler: this,
+        platform: options.platform,
+        dev: options.dev,
+      },
+      config,
+    ))
       : Promise.resolve(null);
 
     return transformerOptions.then(overrides => {
-      return {...options, ...overrides};
+      return { ...options, ...overrides };
     });
   }
 }
 
 function generateJSONModule(module) {
-  return readFile(module.path).then(function(data) {
+  return readFile(module.path).then(function (data) {
     const code = 'module.exports = ' + data.toString('utf8') + ';';
 
     return new ModuleTransport({
@@ -611,7 +640,10 @@ class DummyCache {
     return loaderCb();
   }
 
-  end(){}
-  invalidate(filepath){}
+  end() {
+  }
+
+  invalidate(filepath) {
+  }
 }
 module.exports = Bundler;
