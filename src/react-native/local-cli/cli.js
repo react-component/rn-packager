@@ -41,14 +41,14 @@ gracefulFs.gracefulify(fs);
 var documentedCommands = {
   'start': [server, 'starts the webserver'],
   'bundle': [bundle, 'builds the javascript bundle for offline use'],
-  'version': [versionInfo, 'print version']
+  'version': [versionInfo, 'print version'],
   // @Denis 暂不支持下面的功能
   // 'unbundle': [unbundle, 'builds javascript as "unbundle" for offline use'],
   // 'new-library': [library, 'generates a native library bridge'],
   // 'link': [link, 'Adds a third-party library to your project. Example: react-native link awesome-camera'],
   // 'android': [generateWrapper, 'generates an Android project for your app'],
-  // 'run-android': [runAndroid, 'builds your app and starts it on a connected Android emulator or device'],
-  // 'run-ios': [runIOS, 'builds your app and starts it on iOS simulator'],
+  'run-android': [runAndroid, 'builds your app and starts it on a connected Android emulator or device'],
+  'run-ios': [runIOS, 'builds your app and starts it on iOS simulator'],
   // 'upgrade': [upgrade, 'upgrade your app\'s template files to the latest version; run this after ' +
   //                      'updating the react-native version in your package.json and running npm install']
 };
