@@ -29,7 +29,7 @@ const presetStage0 = require('babel-preset-stage-0');
  * project level .babelrc file, and if it doesn't exist, reads the
  * default RN babelrc file and uses that.
  */
-const getBabelRC = (function() {
+const getBabelRC = (function () {
   let babelRC = null;
 
   return function _getBabelRC(projectRoots) {
@@ -58,7 +58,7 @@ const getBabelRC = (function() {
       babelRC = json5.parse(
         fs.readFileSync(
           path.resolve(__dirname, 'react-packager', 'rn-babelrc.json'))
-        );
+      );
 
       // Require the babel-preset's listed in the default babel config
       babelRC.presets = babelRC.presets.map((preset) => require('babel-preset-' + preset));
@@ -71,7 +71,7 @@ const getBabelRC = (function() {
     if (projectRoots && projectRoots.length > 0) {
       projectBabelConfigPath = path.resolve(projectRoots[0], 'babel.config.js');
     }
-    
+
     if (projectBabelConfigPath && fs.existsSync(projectBabelConfigPath)) {
       babelRC = require(projectBabelConfigPath)(babelRC) || babelRC;
     }
@@ -111,11 +111,25 @@ function buildBabelConfig(filename, options) {
   return Object.assign({}, babelRC, config);
 }
 
+
 function transform(src, filename, options) {
   options = options || {};
 
   const babelConfig = buildBabelConfig(filename, options);
-  const result = babel.transform(src, babelConfig);
+
+  //@yiminghe ts support
+  const transform = require('ts-transformer').transform;
+  var jsCode = src;
+  
+  if (filename.match(/\.tsx?$/)) {
+    jsCode = transform(src, filename, {
+      target: 'es6',
+      jsx: 'preserve',
+      moduleResolution: 'node'
+    });
+  }
+
+  const result = babel.transform(jsCode, babelConfig);
 
   return {
     code: result.code,
@@ -123,7 +137,7 @@ function transform(src, filename, options) {
   };
 }
 
-module.exports = function(data, callback) {
+module.exports = function (data, callback) {
   let result;
   try {
     result = transform(data.sourceCode, data.filename, data.options);
