@@ -219,7 +219,8 @@ class ResolutionRequest {
                 }
                 // @Denis 记录已经加入dep的模块名，防止同名不同路径的模块重复打入
                 if (this._depModules.indexOf(depName) > -1) {
-                  return null;
+                  // bug: https://github.com/react-component/m-date-picker
+                  //return null;
                 } else {
                   this._depModules.push(depName);
                 }
