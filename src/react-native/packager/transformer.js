@@ -116,12 +116,11 @@ function transform(src, filename, options) {
   options = options || {};
 
   const babelConfig = buildBabelConfig(filename, options);
-
-  //@yiminghe ts support
-  const transform = require('ts-transformer').transform;
   var jsCode = src;
   
   if (filename.match(/\.tsx?$/)) {
+    //@yiminghe ts support
+    const transform = require('ts-transformer').transform;
     jsCode = transform(src, filename, {
       target: 'es6',
       jsx: 'preserve',
