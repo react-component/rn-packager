@@ -1,7 +1,0 @@
-{
-  "name": "rn-packager-demo",
-  "version": "0.1.0",
-  "devDependencies": {
-    "rn-core": "~0.4.0"
-  }
-}
