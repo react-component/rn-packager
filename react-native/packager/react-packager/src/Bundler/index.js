@@ -164,9 +164,13 @@ class Bundler {
   }
 
   bundle(options) {
-    const {dev, minify, unbundle} = options;
+    // @Denis
+    // const {dev, minify, unbundle} = options;
+    const {dev, minify, unbundle, includeFramework} = options;
     const moduleSystemDeps =
-      this._resolver.getModuleSystemDependencies({dev, unbundle});
+      // @Denis
+      // this._resolver.getModuleSystemDependencies({dev, unbundle});
+      this._resolver.getModuleSystemDependencies({dev, unbundle, includeFramework});
     return this._bundle({
       ...options,
       bundle: new Bundle({dev, minify, sourceMapUrl: options.sourceMapUrl}),
@@ -247,9 +251,13 @@ class Bundler {
     entryModuleOnly,
     resolutionResponse,
     isolateModuleIDs,
+    includeFramework, //@Denis
   }) {
     const onResolutionResponse = response => {
-      bundle.setMainModuleId(response.getModuleId(getMainModule(response)));
+      // @Denis 把入口模块的名称也保存
+      const mainModule = getMainModule(response);
+      bundle.setMainModuleId(response.getModuleId(mainModule));
+      bundle.setMainModuleName(mainModule.name);
       if (entryModuleOnly) {
         response.dependencies = response.dependencies.filter(module =>
           module.path.endsWith(entryFile)
@@ -266,9 +274,9 @@ class Bundler {
       ).then(() => {
         const runBeforeMainModuleIds = Array.isArray(runBeforeMainModule)
           ? runBeforeMainModule
-              .map(name => modulesByName[name])
-              .filter(Boolean)
-              .map(response.getModuleId)
+              // .map(name => modulesByName[name])
+              // .filter(Boolean)
+              // .map(response.getModuleId)
           : undefined;
 
         bundle.finalize({
@@ -290,6 +298,7 @@ class Bundler {
       onResolutionResponse,
       finalizeBundle,
       isolateModuleIDs,
+      includeFramework, //@Denis
     });
   }
 
@@ -300,6 +309,7 @@ class Bundler {
     sourceMapUrl,
     dev,
     platform,
+    includeFramework, //@Denis
   }) {
     const onModuleTransformed = ({module, transformed, response, bundle}) => {
       const deps = Object.create(null);
@@ -328,6 +338,7 @@ class Bundler {
       finalizeBundle,
       minify: false,
       bundle: new PrepackBundle(sourceMapUrl),
+      includeFramework, //@Denis
     });
   }
 
@@ -341,6 +352,7 @@ class Bundler {
     unbundle,
     resolutionResponse,
     isolateModuleIDs,
+    includeFramework, //@Denis
     onResolutionResponse = noop,
     onModuleTransformed = noop,
     finalizeBundle = noop,
@@ -369,6 +381,7 @@ class Bundler {
         onProgress,
         minify,
         isolateModuleIDs,
+        includeFramework, // @Denis
         generateSourceMaps: unbundle,
       });
     }
@@ -468,6 +481,7 @@ class Bundler {
     generateSourceMaps = false,
     isolateModuleIDs = false,
     onProgress,
+    includeFramework, // @Denis
   }) {
     return this.getTransformOptions(
       entryFile,
@@ -477,6 +491,7 @@ class Bundler {
         hot,
         generateSourceMaps,
         projectRoots: this._projectRoots,
+        includeFramework, // @Denis
       },
     ).then(transformSpecificOptions => {
       const transformOptions = {
@@ -488,16 +503,21 @@ class Bundler {
 
       return this._resolver.getDependencies(
         entryFile,
-        {dev, platform, recursive},
+        // @Denis
+        // {dev, platform, recursive},
+        {dev, platform, recursive, includeFramework},
         transformOptions,
         onProgress,
         isolateModuleIDs ? createModuleIdFactory() : this._getModuleId,
       );
     });
   }
-
-  getOrderedDependencyPaths({ entryFile, dev, platform }) {
-    return this.getDependencies({entryFile, dev, platform}).then(
+  // @Denis
+  // getOrderedDependencyPaths({ entryFile, dev, platform }) {
+  getOrderedDependencyPaths({ entryFile, dev, platform, includeFramework }) {
+    // @Denis
+    // return this.getDependencies({entryFile, dev, platform}).then(
+    return this.getDependencies({entryFile, dev, platform, includeFramework}).then(
       ({ dependencies }) => {
         const ret = [];
         const promises = [];

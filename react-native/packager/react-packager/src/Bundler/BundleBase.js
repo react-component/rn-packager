@@ -30,6 +30,15 @@ class BundleBase {
     this._mainModuleId = moduleId;
   }
 
+  // @Denis
+  getMainModuleName() {
+    return this._mainModuleName;
+  }
+  // @Denis
+  setMainModuleName(moduleName) {
+    this._mainModuleName = moduleName;
+  }
+
   addModule(module) {
     if (!(module instanceof ModuleTransport)) {
       throw new Error('Expeceted a ModuleTransport object');
@@ -92,8 +101,10 @@ class BundleBase {
 
   static fromJSON(bundle, json) {
     bundle._assets = json.assets;
-    bundle._modules = json.modules;
+    bundle._modules = json.modules;debugger;
     bundle.setMainModuleId(json.mainModuleId);
+    // @Denis
+    bundle.setMainModuleName(json.mainModuleName);
 
     Object.freeze(bundle._modules);
     Object.freeze(bundle._assets);

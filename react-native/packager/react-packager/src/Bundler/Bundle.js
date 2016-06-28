@@ -56,15 +56,20 @@ class Bundle extends BundleBase {
     options = options || {};
     if (options.runMainModule) {
       options.runBeforeMainModule.forEach(this._addRequireCall, this);
-      this._addRequireCall(super.getMainModuleId());
+      // @Denis 用 Module name 代替
+      // this._addRequireCall(super.getMainModuleId());
+      this._addRequireCall(super.getMainModuleName());
     }
 
     super.finalize();
   }
 
   _addRequireCall(moduleId) {
-    const code = `;require(${JSON.stringify(moduleId)});`;
+    // @Denis
+    // const code = `;require(${JSON.stringify(moduleId)});`;
+    const code = `;require('${moduleId}');`;
     const name = 'require-' + moduleId;
+    debugger;
     super.addModule(new ModuleTransport({
       name,
       id: this._numRequireCalls - 1,

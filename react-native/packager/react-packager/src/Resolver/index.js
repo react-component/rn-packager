@@ -15,6 +15,15 @@ const DependencyGraph = require('node-haste');
 const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
 
+// @Denis 获取模块名单
+const fs = require('fs');
+let coreModulesList = [];
+if (fs.existsSync(path.join(process.cwd(), 'coreModulesList.js'))) {
+  coreModulesList = require(process.cwd() + '/coreModulesList');
+} else if(fs.existsSync(path.join(process.cwd(), '/node_modules/rn-core/coreModulesList.js'))) {
+  coreModulesList = require(process.cwd() + '/node_modules/rn-core/coreModulesList');
+}
+
 const validateOpts = declareOpts({
   projectRoots: {
     type: 'array',
@@ -76,6 +85,11 @@ const getDependenciesValidateOpts = declareOpts({
     type: 'boolean',
     default: true,
   },
+  // @Denis
+  includeFramework: {
+    type: 'boolean',
+    default: false
+  },
 });
 
 class Resolver {
@@ -134,18 +148,40 @@ class Resolver {
   }
 
   getDependencies(entryPath, options, transformOptions, onProgress, getModuleId) {
-    const {platform, recursive} = getDependenciesValidateOpts(options);
+    // @Denis
+    const {platform, recursive, includeFramework} = getDependenciesValidateOpts(options);
     return this._depGraph.getDependencies({
       entryPath,
       platform,
       transformOptions,
       recursive,
       onProgress,
+      includeFramework, // @Denis
     }).then(resolutionResponse => {
-      this._getPolyfillDependencies().reverse().forEach(
-        polyfill => resolutionResponse.prependDependency(polyfill)
-      );
-
+      // @Denis 重写输出逻辑
+      // this._getPolyfillDependencies().reverse().forEach(
+      //   polyfill => resolutionResponse.prependDependency(polyfill)
+      // );
+      //
+      // resolutionResponse.getModuleId = getModuleId;
+      // return resolutionResponse.finalize();
+      if (includeFramework) {
+        this._getPolyfillDependencies().reverse().forEach(
+          polyfill => resolutionResponse.prependDependency(polyfill)
+        );
+      } else {
+        console.log("分析依赖模块路径(实际打包的模块):");
+        let dependencies = [];
+        resolutionResponse.dependencies.forEach(mp => {
+          if (coreModulesList.indexOf(mp.name) > -1) {
+            resolutionResponse._mappings[mp.hash()] && delete resolutionResponse._mappings[mp.hash()];
+          } else {
+            console.log("> ", mp.name);
+            dependencies.push(mp);
+          }
+        });
+        resolutionResponse.dependencies = dependencies;
+      }
       resolutionResponse.getModuleId = getModuleId;
       return resolutionResponse.finalize();
     });
@@ -159,6 +195,11 @@ class Resolver {
         : path.join(__dirname, 'polyfills/prelude.js');
 
     const moduleSystem = path.join(__dirname, 'polyfills/require.js');
+
+    // @Denis
+    if (!opts.includeFramework) {
+      return [];
+    }
 
     return [
       prelude,
@@ -200,10 +241,11 @@ class Resolver {
     resolutionResponse.getResolvedDependencyPairs(module)
       .forEach(([depName, depModule]) => {
         if (depModule) {
-          resolvedDeps[depName] = resolutionResponse.getModuleId(depModule);
+          // @Denis 以 Module name 替代
+          // resolvedDeps[depName] = resolutionResponse.getModuleId(depModule);
+          resolvedDeps[depName] = depModule.name;
         }
       });
-
     // if we have a canonical ID for the module imported here,
     // we use it, so that require() is always called with the same
     // id for every module.
@@ -214,7 +256,9 @@ class Resolver {
     //    require('../a/c') => require(3);
     const replaceModuleId = (codeMatch, quote, depName) =>
       depName in resolvedDeps
-        ? `${JSON.stringify(resolvedDeps[depName])} /* ${depName} */`
+        // @Denis Module name
+        // ? `${JSON.stringify(resolvedDeps[depName])} /* ${depName} */`
+        ? `'${resolvedDeps[depName]}'`
         : codeMatch;
 
     code = dependencyOffsets.reduceRight((codeBits, offset) => {
@@ -274,7 +318,7 @@ class Resolver {
 function defineModuleCode(moduleName, code, verboseName = '', dev = true) {
   return [
     '__d(',
-    `${JSON.stringify(moduleName)} /* ${verboseName} */, `,
+    `'${verboseName}', `,
     'function(global, require, module, exports) {',
       code,
     '\n}',

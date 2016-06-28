@@ -16,22 +16,19 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var AsyncTaskGroup = require('../lib/AsyncTaskGroup');
+var MapWithDefaults = require('../lib/MapWithDefaults');
 var debug = require('debug')('ReactNativePackager:DependencyGraph');
 var util = require('util');
 var path = require('../fastpath');
 var realPath = require('path');
 var isAbsolutePath = require('absolute-path');
 var getAssetDataFromName = require('../lib/getAssetDataFromName');
-var throat = require('throat')(Promise);
-
-var MAX_CONCURRENT_FILE_READS = 32;
-var getDependencies = throat(MAX_CONCURRENT_FILE_READS, function (module, transformOptions) {
-  return module.getDependencies(transformOptions);
-});
 
 var ResolutionRequest = function () {
   function ResolutionRequest(_ref) {
     var platform = _ref.platform;
+    var platforms = _ref.platforms;
     var preferNativePlatform = _ref.preferNativePlatform;
     var entryPath = _ref.entryPath;
     var hasteMap = _ref.hasteMap;
@@ -40,10 +37,12 @@ var ResolutionRequest = function () {
     var moduleCache = _ref.moduleCache;
     var fastfs = _ref.fastfs;
     var shouldThrowOnUnresolvedErrors = _ref.shouldThrowOnUnresolvedErrors;
+    var extraNodeModules = _ref.extraNodeModules;
 
     _classCallCheck(this, ResolutionRequest);
 
     this._platform = platform;
+    this._platforms = platforms;
     this._preferNativePlatform = preferNativePlatform;
     this._entryPath = entryPath;
     this._hasteMap = hasteMap;
@@ -52,6 +51,7 @@ var ResolutionRequest = function () {
     this._moduleCache = moduleCache;
     this._fastfs = fastfs;
     this._shouldThrowOnUnresolvedErrors = shouldThrowOnUnresolvedErrors;
+    this._extraNodeModules = extraNodeModules;
     this._resetResolutionCache();
   }
 
@@ -94,23 +94,20 @@ var ResolutionRequest = function () {
         debug('Unable to resolve module %s from %s', toModuleName, fromModule.path);
         return null;
       };
-
-      // @Denis 调整模块依赖逻辑
-      if(toModuleName[0] !== '.' && toModuleName[0] !== '/') {
+      if (!this._helpers.isNodeModulesDir(fromModule.path) && !(isRelativeImport(toModuleName) || isAbsolutePath(toModuleName))) {
         return this._tryResolve(function () {
           return _this._resolveHasteDependency(fromModule, toModuleName);
         }, function () {
           return _this._resolveNodeDependency(fromModule, toModuleName);
         }).then(cacheResult, forgive);
       } else {
+        // @Denis 尝试三方模块从Haste里获取依赖
         return this._tryResolve(function () {
-          return _this._resolveNodeDependency(fromModule, toModuleName);
+          return this._resolveNodeDependency(fromModule, toModuleName);
         }, function () {
           return _this._resolveHasteDependency(fromModule, toModuleName);
         }).then(cacheResult, forgive);
       }
-
-      // return this._resolveNodeDependency(fromModule, toModuleName).then(cacheResult, forgive);
     }
   }, {
     key: 'getOrderedDependencies',
@@ -127,102 +124,157 @@ var ResolutionRequest = function () {
       return this._getAllMocks(mocksPattern).then(function (allMocks) {
         var entry = _this2._moduleCache.getModule(_this2._entryPath);
         var mocks = Object.create(null);
-        var visited = Object.create(null);
-        visited[entry.hash()] = true;
 
         response.pushDependency(entry);
         var totalModules = 1;
         var finishedModules = 0;
 
-        var collect = function collect(mod) {
-          return getDependencies(mod, transformOptions).then(function (depNames) {
-            return Promise.all(depNames.map(function (name) {
-              return _this2.resolveDependency(mod, name);
+        var resolveDependencies = function resolveDependencies(module) {
+          return module.getDependencies(transformOptions).then(function (dependencyNames) {
+            return Promise.all(dependencyNames.map(function (name) {
+              return _this2.resolveDependency(module, name);
             })).then(function (dependencies) {
-              return [depNames, dependencies];
+              return [dependencyNames, dependencies];
             });
-          }).then(function (_ref3) {
-            var _ref4 = _slicedToArray(_ref3, 2);
-
-            var depNames = _ref4[0];
-            var dependencies = _ref4[1];
-
-            if (allMocks) {
-              var list = [mod.getName()];
-              var pkg = mod.getPackage();
-              if (pkg) {
-                list.push(pkg.getName());
-              }
-              return Promise.all(list).then(function (names) {
-                names.forEach(function (name) {
-                  if (allMocks[name] && !mocks[name]) {
-                    var mockModule = _this2._moduleCache.getModule(allMocks[name]);
-                    depNames.push(name);
-                    dependencies.push(mockModule);
-                    mocks[name] = allMocks[name];
-                  }
-                });
-                return [depNames, dependencies];
-              });
-            }
-            return [depNames, dependencies];
-          }).then(function (_ref5) {
-            var _ref6 = _slicedToArray(_ref5, 2);
-
-            var depNames = _ref6[0];
-            var dependencies = _ref6[1];
-
-            var filteredPairs = [];
-
-            dependencies.forEach(function (modDep, i) {
-              var name = depNames[i];
-              if (modDep == null) {
-                // It is possible to require mocks that don't have a real
-                // module backing them. If a dependency cannot be found but there
-                // exists a mock with the desired ID, resolve it and add it as
-                // a dependency.
-                if (allMocks && allMocks[name] && !mocks[name]) {
-                  var mockModule = _this2._moduleCache.getModule(allMocks[name]);
-                  mocks[name] = allMocks[name];
-                  return filteredPairs.push([name, mockModule]);
-                }
-
-                debug('WARNING: Cannot find required module `%s` from module `%s`', name, mod.path);
-                return false;
-              }
-              return filteredPairs.push([name, modDep]);
-            });
-
-            response.setResolvedDependencyPairs(mod, filteredPairs);
-
-            var newDependencies = filteredPairs.filter(function (_ref7) {
-              var _ref8 = _slicedToArray(_ref7, 2);
-
-              var modDep = _ref8[1];
-              return !visited[modDep.hash()];
-            });
-
-            if (onProgress) {
-              finishedModules += 1;
-              totalModules += newDependencies.length;
-              onProgress(finishedModules, totalModules);
-            }
-            return Promise.all(newDependencies.map(function (_ref9) {
-              var _ref10 = _slicedToArray(_ref9, 2);
-
-              var depName = _ref10[0];
-              var modDep = _ref10[1];
-
-              visited[modDep.hash()] = true;
-              return Promise.all([modDep, recursive ? collect(modDep) : []]);
-            }));
           });
         };
 
-        return collect(entry).then(function (deps) {
-          recursiveFlatten(deps).forEach(function (dep) {
-            return response.pushDependency(dep);
+        var addMockDependencies = !allMocks ? function (module, result) {
+          return result;
+        } : function (module, _ref3) {
+          var _ref4 = _slicedToArray(_ref3, 2);
+
+          var dependencyNames = _ref4[0];
+          var dependencies = _ref4[1];
+
+          var list = [module.getName()];
+          var pkg = module.getPackage();
+          if (pkg) {
+            list.push(pkg.getName());
+          }
+          return Promise.all(list).then(function (names) {
+            names.forEach(function (name) {
+              if (allMocks[name] && !mocks[name]) {
+                var mockModule = _this2._moduleCache.getModule(allMocks[name]);
+                dependencyNames.push(name);
+                dependencies.push(mockModule);
+                mocks[name] = allMocks[name];
+              }
+            });
+            return [dependencyNames, dependencies];
           });
+        };
+
+        var collectedDependencies = new MapWithDefaults(function (module) {
+          return collect(module);
+        });
+        var crawlDependencies = function crawlDependencies(mod, _ref5) {
+          var _ref6 = _slicedToArray(_ref5, 2);
+
+          var depNames = _ref6[0];
+          var dependencies = _ref6[1];
+
+          var filteredPairs = [];
+
+          dependencies.forEach(function (modDep, i) {
+            var name = depNames[i];
+            if (modDep == null) {
+              // It is possible to require mocks that don't have a real
+              // module backing them. If a dependency cannot be found but there
+              // exists a mock with the desired ID, resolve it and add it as
+              // a dependency.
+              if (allMocks && allMocks[name] && !mocks[name]) {
+                var mockModule = _this2._moduleCache.getModule(allMocks[name]);
+                mocks[name] = allMocks[name];
+                return filteredPairs.push([name, mockModule]);
+              }
+
+              debug('WARNING: Cannot find required module `%s` from module `%s`', name, mod.path);
+              return false;
+            }
+            return filteredPairs.push([name, modDep]);
+          });
+
+          response.setResolvedDependencyPairs(mod, filteredPairs);
+
+          var dependencyModules = filteredPairs.map(function (_ref7) {
+            var _ref8 = _slicedToArray(_ref7, 2);
+
+            var m = _ref8[1];
+            return m;
+          });
+          var newDependencies = dependencyModules.filter(function (m) {
+            return !collectedDependencies.has(m);
+          });
+
+          if (onProgress) {
+            finishedModules += 1;
+            totalModules += newDependencies.length;
+            onProgress(finishedModules, totalModules);
+          }
+
+          if (recursive) {
+            // doesn't block the return of this function invocation, but defers
+            // the resulution of collectionsInProgress.done.then(…)
+            dependencyModules.forEach(function (dependency) {
+              return collectedDependencies.get(dependency);
+            });
+          }
+          return dependencyModules;
+        };
+
+        var collectionsInProgress = new AsyncTaskGroup();
+        function collect(module) {
+          collectionsInProgress.start(module);
+          var result = resolveDependencies(module).then(function (result) {
+            return addMockDependencies(module, result);
+          }).then(function (result) {
+            return crawlDependencies(module, result);
+          });
+          var end = function end() {
+            return collectionsInProgress.end(module);
+          };
+          result.then(end, end);
+          return result;
+        }
+
+        return Promise.all([
+        // kicks off recursive dependency discovery, but doesn't block until it's done
+        collectedDependencies.get(entry),
+
+        // resolves when there are no more modules resolving dependencies
+        collectionsInProgress.done]).then(function (_ref9) {
+          var _ref10 = _slicedToArray(_ref9, 1);
+
+          var rootDependencies = _ref10[0];
+
+          return Promise.all(Array.from(collectedDependencies, resolveKeyWithPromise)).then(function (moduleToDependenciesPairs) {
+            return [rootDependencies, new MapWithDefaults(function () {
+              return [];
+            }, moduleToDependenciesPairs)];
+          });
+        }).then(function (_ref11) {
+          var _ref12 = _slicedToArray(_ref11, 2);
+
+          var rootDependencies = _ref12[0];
+          var moduleDependencies = _ref12[1];
+
+          // serialize dependencies, and make sure that every single one is only
+          // included once
+          var seen = new Set([entry]);
+          function traverse(dependencies) {
+            dependencies.forEach(function (dependency) {
+              if (seen.has(dependency)) {
+                return;
+              }
+
+              seen.add(dependency);
+              response.pushDependency(dependency);
+              traverse(moduleDependencies.get(dependency));
+            });
+          }
+
+          traverse(rootDependencies);
           response.setMocks(mocks);
         });
       });
@@ -319,11 +371,11 @@ var ResolutionRequest = function () {
     value: function _resolveNodeDependency(fromModule, toModuleName) {
       var _this5 = this;
 
-      if (toModuleName[0] === '.' || toModuleName[1] === '/') {
+      if (isRelativeImport(toModuleName) || isAbsolutePath(toModuleName)) {
         return this._resolveFileOrDir(fromModule, toModuleName);
       } else {
         return this._redirectRequire(fromModule, toModuleName).then(function (realModuleName) {
-          if (realModuleName[0] === '.' || realModuleName[1] === '/') {
+          if (isRelativeImport(realModuleName) || isAbsolutePath(realModuleName)) {
             // derive absolute path /.../node_modules/fromModuleDir/realModuleName
             var fromModuleParentIdx = fromModule.path.lastIndexOf('node_modules/') + 13;
             var fromModuleDir = fromModule.path.slice(0, fromModule.path.indexOf('/', fromModuleParentIdx));
@@ -334,6 +386,15 @@ var ResolutionRequest = function () {
           var searchQueue = [];
           for (var currDir = path.dirname(fromModule.path); currDir !== realPath.parse(fromModule.path).root; currDir = path.dirname(currDir)) {
             searchQueue.push(path.join(currDir, 'node_modules', realModuleName));
+          }
+
+          if (_this5._extraNodeModules) {
+            var bits = toModuleName.split('/');
+            var packageName = bits[0];
+            if (_this5._extraNodeModules[packageName]) {
+              bits[0] = _this5._extraNodeModules[packageName];
+              searchQueue.push(path.join.apply(path, bits));
+            }
           }
 
           var p = Promise.reject(new UnableToResolveError(fromModule, toModuleName, 'Node module not found'));
@@ -365,7 +426,7 @@ var ResolutionRequest = function () {
             throw new UnableToResolveError(fromModule, toModule, 'Directory ' + dirname + ' doesn\'t exist');
           }
 
-          var _getAssetDataFromName = getAssetDataFromName(potentialModulePath);
+          var _getAssetDataFromName = getAssetDataFromName(potentialModulePath, _this6._platforms);
 
           var name = _getAssetDataFromName.name;
           var type = _getAssetDataFromName.type;
@@ -392,7 +453,7 @@ var ResolutionRequest = function () {
           }
         }
 
-        var file = undefined;
+        var file = void 0;
         if (_this6._fastfs.fileExists(potentialModulePath)) {
           file = potentialModulePath;
         } else if (_this6._platform != null && _this6._fastfs.fileExists(potentialModulePath + '.' + _this6._platform + '.js')) {
@@ -467,10 +528,20 @@ function normalizePath(modulePath) {
   return modulePath.replace(/\/$/, '');
 }
 
-function recursiveFlatten(array) {
-  return Array.prototype.concat.apply(Array.prototype, array.map(function (item) {
-    return Array.isArray(item) ? recursiveFlatten(item) : item;
-  }));
+function resolveKeyWithPromise(_ref13) {
+  var _ref14 = _slicedToArray(_ref13, 2);
+
+  var key = _ref14[0];
+  var promise = _ref14[1];
+
+  return promise.then(function (value) {
+    return [key, value];
+  });
+}
+
+function isRelativeImport(path) {
+  return (/^[.][.]?[/]/.test(path)
+  );
 }
 
 module.exports = ResolutionRequest;

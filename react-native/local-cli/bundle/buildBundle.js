@@ -43,6 +43,8 @@ function buildBundle(args, config, output = outputBundle, packagerInstance) {
       dev: args.dev,
       minify: !args.dev,
       platform: args.platform,
+      runBeforeMainModule: args.runBeforeMainModule,  // @Denis
+      includeFramework: args['include-framework'],    // @Denis
     };
 
     // If a packager instance was not provided, then just create one for this

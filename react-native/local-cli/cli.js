@@ -13,7 +13,7 @@
 require('./server/checkNodeVersion')();
 
 require('../packager/babelRegisterOnly')([
-  /private-cli\/src/,
+  // /private-cli\/src/,  @Denis
   /local-cli/,
   /react-packager\/src/
 ]);

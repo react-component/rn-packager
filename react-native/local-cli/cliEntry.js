@@ -53,6 +53,8 @@ const documentedCommands = {
   'upgrade': [upgrade, 'upgrade your app\'s template files to the latest version; run this after ' +
                        'updating the react-native version in your package.json and running npm install'],
   'link': [linkWrapper, 'link a library'],
+  // @Denis
+  'version': [printVersion, 'print version'],
 };
 
 const exportedCommands = {dependencies: dependencies};
@@ -88,7 +90,9 @@ function run() {
     return;
   }
 
-  command[0](args, Config.get(__dirname, defaultConfig)).done();
+  // @Denis 从当前执行目录下去找 rn-cli.config.js
+  // command[0](args, Config.get(__dirname, defaultConfig)).done();
+  command[0](args, Config.get(process.cwd(), defaultConfig)).done();
 }
 
 function generateWrapper(args, config) {
@@ -121,6 +125,17 @@ function printInitWarning() {
       'folder. Run this command from a different folder or remove node_modules/react-native'
     ].join('\n'));
     process.exit(1);
+  });
+}
+
+// @Denis
+function printVersion() {
+  return new Promise((resolve, reject) => {
+    var version = JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, '../../../package.json'), 'utf8')
+    ).version;
+    console.log(version);
+    resolve();
   });
 }
 

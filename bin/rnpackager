@@ -3,5 +3,5 @@
 
 'use strict';
 
-var cli = require('../react-native/cli.js');
+const cli = require('../react-native/cli.js');
 cli.run();

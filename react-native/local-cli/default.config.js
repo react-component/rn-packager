@@ -46,7 +46,9 @@ function getRoots() {
      // React Native was installed using CocoaPods.
     return [path.resolve(__dirname, '../../..')];
   } else {
-    return [path.resolve(__dirname, '..')];
+    // @Denis 当前执行目录为项目根目录，polyfills
+    // return [path.resolve(__dirname, '..')];
+    return [process.cwd()];
   }
 }
 

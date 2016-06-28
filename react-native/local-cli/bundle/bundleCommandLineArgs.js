@@ -61,5 +61,14 @@ module.exports = [
     command: 'reset-cache',
     description: 'Removes cached files',
     default: false
-  }
+  }, {  // @Denis 是否集成框架
+    command: 'include-framework',
+    description: 'Whether to bundle include core modules and polyfills',
+    default: false,
+  }, { // @Denis 增加runBeforeMainModule
+    command: 'runBeforeMainModule',
+    description: 'Modules required before main module',
+    type: 'string',
+    required: false,
+  },
 ];

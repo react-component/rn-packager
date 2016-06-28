@@ -21,6 +21,12 @@ var sharedBlacklist = [
 
   // TODO(jkassens, #9876132): Remove this rule when it's no longer needed.
   'Libraries/Relay/relay/tools/relayUnstableBatchedUpdates.js',
+
+  // @Denis
+  /node_modules\/react-native\/.*/,
+  /spm_modules\/.*/,
+  /rn-tools\/.*/,
+  'rn-packager/react-native/package.json'
 ];
 
 var platformBlacklists = {
