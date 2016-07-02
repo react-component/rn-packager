@@ -187,6 +187,9 @@ var Module = function () {
           // @Denis name保存在module.name属性上
           if (!_this4.moduleName && _ref8[2]) {
             _this4.moduleName = _ref8[2];
+            // console.log("isAsset", _this4.isAsset(),
+            // "isAsset_DEPRECATED", _this4.isAsset_DEPRECATED(),
+            // "Name:", _this4.moduleName);
           }
 
           // Ignore requires in JSON files or generated code. An example of this

@@ -173,10 +173,10 @@ class Resolver {
         console.log("分析依赖模块路径(实际打包的模块):");
         let dependencies = [];
         resolutionResponse.dependencies.forEach(mp => {
-          if (coreModulesList.indexOf(mp.name) > -1) {
+          if (coreModulesList.indexOf(mp.moduleName) > -1) {
             resolutionResponse._mappings[mp.hash()] && delete resolutionResponse._mappings[mp.hash()];
           } else {
-            console.log("> ", mp.name);
+            console.log("> ", mp.moduleName);
             dependencies.push(mp);
           }
         });
