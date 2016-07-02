@@ -55,9 +55,9 @@ var Module = function () {
     if (!this.isPolyfill() && !this.isAsset_DEPRECATED() && !this.moduleName) {
       this.getName().then(name => {
         this.moduleName = name;
-        console.log("isAsset", this.isAsset(),
-        "isAsset_DEPRECATED", this.isAsset_DEPRECATED(),
-        "Name:", this.moduleName);
+        // console.log("isAsset", this.isAsset(),
+        // "isAsset_DEPRECATED", this.isAsset_DEPRECATED(),
+        // "Name:", this.moduleName);
       });
     }
   }
