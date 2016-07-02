@@ -257,7 +257,7 @@ class Bundler {
       // @Denis 把入口模块的名称也保存
       const mainModule = getMainModule(response);
       bundle.setMainModuleId(response.getModuleId(mainModule));
-      bundle.setMainModuleName(mainModule.name);
+      bundle.setMainModuleName(mainModule.moduleName);
       if (entryModuleOnly) {
         response.dependencies = response.dependencies.filter(module =>
           module.path.endsWith(entryFile)

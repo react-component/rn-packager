@@ -51,9 +51,15 @@ var Module = function () {
     this._transformCode = transformCode;
     this._depGraphHelpers = depGraphHelpers;
     this._options = options;
-
-    // @Denis 初始化Module的时候就把name挂在属性上
-    this.getName().then(name => {this.name = name});
+    // @Denis 模块名称存放在moduleName属性,
+    if (!this.isPolyfill() && !this.isAsset_DEPRECATED() && !this.moduleName) {
+      this.getName().then(name => {
+        this.moduleName = name;
+        console.log("isAsset", this.isAsset(),
+        "isAsset_DEPRECATED", this.isAsset_DEPRECATED(),
+        "Name:", this.moduleName);
+      });
+    }
   }
 
   _createClass(Module, [{
@@ -168,14 +174,20 @@ var Module = function () {
       var _this4 = this;
 
       return this._cache.get(this.path, cacheKey('moduleData', transformOptions), function () {
+
         var fileContentPromise = _this4._fastfs.readFile(_this4.path);
-        return Promise.all([fileContentPromise, _this4._readDocBlock(fileContentPromise)]).then(function (_ref7) {
+        // @Denis 在读取文件时获取name
+        return Promise.all([fileContentPromise, _this4._readDocBlock(fileContentPromise), _this4.getName()]).then(function (_ref7) {
           var _ref8 = _slicedToArray(_ref7, 2);
 
           var source = _ref8[0];
           var _ref8$ = _ref8[1];
           var id = _ref8$.id;
           var moduleDocBlock = _ref8$.moduleDocBlock;
+          // @Denis name保存在module.name属性上
+          if (!_this4.moduleName && _ref8[2]) {
+            _this4.moduleName = _ref8[2];
+          }
 
           // Ignore requires in JSON files or generated code. An example of this
           // is prebuilt files like the SourceMap library.

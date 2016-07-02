@@ -243,7 +243,7 @@ class Resolver {
         if (depModule) {
           // @Denis 以 Module name 替代
           // resolvedDeps[depName] = resolutionResponse.getModuleId(depModule);
-          resolvedDeps[depName] = depModule.name;
+          resolvedDeps[depName] = depModule.moduleName;
         }
       });
     // if we have a canonical ID for the module imported here,
