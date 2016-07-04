@@ -1,0 +1,10 @@
+{
+  "name": "test",
+  "private": true,
+  "dependencies": {
+    "react": "15.2.0"
+  },
+  "scripts": {
+    "start": "node ../bin/rnpackager start"
+  }
+}
