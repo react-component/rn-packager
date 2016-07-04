@@ -2,7 +2,8 @@
   "name": "test",
   "private": true,
   "dependencies": {
-    "react": "15.2.0"
+    "react": "15.2.0",
+    "babel-plugin-antd": "~0.4.0"
   },
   "scripts": {
     "start": "node ../bin/rnpackager start"
