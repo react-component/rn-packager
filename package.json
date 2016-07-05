@@ -1,6 +1,6 @@
 {
   "name": "rn-packager",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Based on Facebook Packager v0.28.0, support Core & Business JS Separate.",
   "main": "src/index.js",
   "bin": {
@@ -16,9 +16,6 @@
   },
   "bugs": {
     "url": "https://github.com/react-component/rn-packager/issues"
-  },
-  "scripts": {
-    "install": "cp -apR ./patches/ ../"
   },
   "dependencies": {
     "absolute-path": "^0.0.0",
@@ -41,6 +38,7 @@
     "connect": "^2.8.3",
     "core-js": "^2.2.2",
     "debug": "^2.2.0",
+    "denodeify": "^1.2.1",
     "fbjs-scripts": "^0.7.0",
     "fs-extra": "^0.26.2",
     "glob": "^5.0.15",
@@ -56,7 +54,6 @@
     "mkdirp": "^0.5.1",
     "module-deps": "^3.9.1",
     "node-fetch": "^1.3.3",
-    "node-haste": "~2.12.0",
     "npmlog": "^2.0.4",
     "opn": "^3.0.2",
     "optimist": "^0.6.1",

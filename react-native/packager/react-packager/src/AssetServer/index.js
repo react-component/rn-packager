@@ -13,7 +13,8 @@ const Promise = require('promise');
 const crypto = require('crypto');
 const declareOpts = require('../lib/declareOpts');
 const fs = require('fs');
-const getAssetDataFromName = require('node-haste').getAssetDataFromName;
+// @Denis
+const getAssetDataFromName = require('../../../../../node-haste').getAssetDataFromName;
 const path = require('path');
 
 const createTimeoutPromise = (timeout) => new Promise((resolve, reject) => {
@@ -194,7 +195,7 @@ class AssetServer {
 
     return map;
   }
-  
+
   _getAssetDataFromName(platform, file) {
     return getAssetDataFromName(file, platform);
   }

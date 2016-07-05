@@ -11,7 +11,8 @@
 
 const path = require('path');
 const Activity = require('../Activity');
-const DependencyGraph = require('node-haste');
+// @Denis
+const DependencyGraph = require('../../../../../node-haste');
 const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
 

@@ -8,7 +8,8 @@
  */
 'use strict';
 
-const getInverseDependencies = require('node-haste').getInverseDependencies;
+// @Denis
+const getInverseDependencies = require('../../../../node-haste').getInverseDependencies;
 const querystring = require('querystring');
 const url = require('url');
 
