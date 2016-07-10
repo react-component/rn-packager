@@ -69,7 +69,6 @@ class Bundle extends BundleBase {
     // const code = `;require(${JSON.stringify(moduleId)});`;
     const code = `;require('${moduleId}');`;
     const name = 'require-' + moduleId;
-    debugger;
     super.addModule(new ModuleTransport({
       name,
       id: this._numRequireCalls - 1,

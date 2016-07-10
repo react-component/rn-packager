@@ -38,10 +38,9 @@ class BundleBase {
   setMainModuleName(moduleName) {
     this._mainModuleName = moduleName;
   }
-
   addModule(module) {
     if (!(module instanceof ModuleTransport)) {
-      throw new Error('Expeceted a ModuleTransport object');
+      throw new Error('Expected a ModuleTransport object');
     }
 
     return this._modules.push(module) - 1;
@@ -101,7 +100,7 @@ class BundleBase {
 
   static fromJSON(bundle, json) {
     bundle._assets = json.assets;
-    bundle._modules = json.modules;debugger;
+    bundle._modules = json.modules;
     bundle.setMainModuleId(json.mainModuleId);
     // @Denis
     bundle.setMainModuleName(json.mainModuleName);

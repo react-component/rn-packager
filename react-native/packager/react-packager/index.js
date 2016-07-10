@@ -9,7 +9,9 @@
 'use strict';
 
 require('../babelRegisterOnly')([/react-packager\/src/]);
+
 // @Denis
+// require('node-haste/lib/fastpath').replace();
 require('../../../node-haste/lib/fastpath').replace();
 useGracefulFs();
 

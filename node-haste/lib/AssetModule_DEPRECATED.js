@@ -41,6 +41,7 @@ var AssetModule_DEPRECATED = function (_Module) {
     key: 'getName',
     value: function getName() {
       // @Denis
+      // return Promise.resolve('image!' + this.name);
       return Promise.resolve(this.moduleName);
     }
   }, {

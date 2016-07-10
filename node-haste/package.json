@@ -2,10 +2,11 @@
   "_args": [
     [
       {
-        "name": "node-haste",
         "raw": "node-haste@~2.12.0",
-        "rawSpec": "~2.12.0",
         "scope": null,
+        "escapedName": "node-haste",
+        "name": "node-haste",
+        "rawSpec": "~2.12.0",
         "spec": ">=2.12.0 <2.13.0",
         "type": "range"
       },
@@ -24,21 +25,31 @@
     "tmp": "tmp/node-haste-2.12.0.tgz_1463761305677_0.3512500221841037"
   },
   "_npmUser": {
-    "email": "dev@david-aurelio.com",
-    "name": "davidaurelio"
+    "name": "davidaurelio",
+    "email": "dev@david-aurelio.com"
   },
   "_npmVersion": "3.8.9",
-  "_phantomChildren": {},
+  "_phantomChildren": {
+    "exec-sh": "0.2.0",
+    "fb-watchman": "1.9.0",
+    "jsonify": "0.0.0",
+    "minimatch": "3.0.2",
+    "minimist": "1.2.0",
+    "ms": "0.7.1",
+    "walker": "1.0.7",
+    "watch": "0.10.0"
+  },
   "_requested": {
-    "name": "node-haste",
     "raw": "node-haste@~2.12.0",
-    "rawSpec": "~2.12.0",
     "scope": null,
+    "escapedName": "node-haste",
+    "name": "node-haste",
+    "rawSpec": "~2.12.0",
     "spec": ">=2.12.0 <2.13.0",
     "type": "range"
   },
   "_requiredBy": [
-    "/"
+    "#USER"
   ],
   "_resolved": "http://registry.npm.alibaba-inc.com/node-haste/download/node-haste-2.12.0.tgz",
   "_shasum": "8d4d1cb87f05adcc4207525b789d7dc717f3c1d7",
@@ -71,10 +82,10 @@
   },
   "directories": {},
   "dist": {
-    "key": "node-haste/-/node-haste-2.12.0.tgz",
-    "noattachment": false,
     "shasum": "8d4d1cb87f05adcc4207525b789d7dc717f3c1d7",
     "size": 45748,
+    "noattachment": false,
+    "key": "node-haste/-/node-haste-2.12.0.tgz",
     "tarball": "http://registry.npm.alibaba-inc.com/node-haste/download/node-haste-2.12.0.tgz"
   },
   "gitHead": "848fceff8f7d2751dc5b6d4a1fbd3f8226c031e5",
@@ -90,24 +101,24 @@
   "main": "lib/index.js",
   "maintainers": [
     {
-      "email": "christoph.pojer@gmail.com",
-      "name": "cpojer"
+      "name": "cpojer",
+      "email": "christoph.pojer@gmail.com"
     },
     {
-      "email": "dev@david-aurelio.com",
-      "name": "davidaurelio"
+      "name": "davidaurelio",
+      "email": "dev@david-aurelio.com"
     },
     {
-      "email": "jeff@anafx.com",
-      "name": "jeffmo"
+      "name": "jeffmo",
+      "email": "jeff@anafx.com"
     },
     {
-      "email": "lee@leebyron.com",
-      "name": "leebyron"
+      "name": "leebyron",
+      "email": "lee@leebyron.com"
     },
     {
-      "email": "paul@oshannessy.com",
-      "name": "zpao"
+      "name": "zpao",
+      "email": "paul@oshannessy.com"
     }
   ],
   "name": "node-haste",

@@ -46,9 +46,9 @@ function getRoots() {
      // React Native was installed using CocoaPods.
     return [path.resolve(__dirname, '../../..')];
   } else {
-    // @Denis 当前执行目录为项目根目录，polyfills
+    // @Denis 当前执行目录为项目根目录，polyfills还是在rn-packager目录下
     // return [path.resolve(__dirname, '..')];
-    return [process.cwd()];
+    return [process.cwd(), path.resolve(__dirname, '../packager/react-packager/src/Resolver/polyfills')];
   }
 }
 

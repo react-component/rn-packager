@@ -174,7 +174,6 @@ var Module = function () {
       var _this4 = this;
 
       return this._cache.get(this.path, cacheKey('moduleData', transformOptions), function () {
-
         var fileContentPromise = _this4._fastfs.readFile(_this4.path);
         // @Denis 在读取文件时获取name
         return Promise.all([fileContentPromise, _this4._readDocBlock(fileContentPromise), _this4.getName()]).then(function (_ref7) {

@@ -14,7 +14,9 @@ const crypto = require('crypto');
 const declareOpts = require('../lib/declareOpts');
 const fs = require('fs');
 // @Denis
+// const getAssetDataFromName = require('node-haste').getAssetDataFromName;
 const getAssetDataFromName = require('../../../../../node-haste').getAssetDataFromName;
+
 const path = require('path');
 
 const createTimeoutPromise = (timeout) => new Promise((resolve, reject) => {
@@ -107,7 +109,8 @@ class AssetServer {
     return (
       this._findRoot(
         this._roots,
-        path.dirname(assetPath)
+        path.dirname(assetPath),
+        assetPath,
       )
       .then(dir => Promise.all([
         dir,
@@ -139,7 +142,7 @@ class AssetServer {
     );
   }
 
-  _findRoot(roots, dir) {
+  _findRoot(roots, dir, debugInfoFile) {
     return Promise.all(
       roots.map(root => {
         const absRoot = path.resolve(root);
@@ -163,7 +166,9 @@ class AssetServer {
           return stats[i].path;
         }
       }
-      throw new Error('Could not find any directories');
+
+      const rootsString = roots.map(s => `'${s}'`).join(', ');
+      throw new Error(`'${debugInfoFile}' could not be found, because '${dir}' is not a subdirectory of any of the roots  (${rootsString})`);
     });
   }
 

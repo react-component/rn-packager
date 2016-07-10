@@ -12,6 +12,7 @@
 const path = require('path');
 const Activity = require('../Activity');
 // @Denis
+// const DependencyGraph = require('node-haste');
 const DependencyGraph = require('../../../../../node-haste');
 const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
@@ -150,6 +151,7 @@ class Resolver {
 
   getDependencies(entryPath, options, transformOptions, onProgress, getModuleId) {
     // @Denis
+    // const {platform, recursive} = getDependenciesValidateOpts(options);
     const {platform, recursive, includeFramework} = getDependenciesValidateOpts(options);
     return this._depGraph.getDependencies({
       entryPath,
@@ -310,15 +312,13 @@ class Resolver {
   minifyModule({path, code, map}) {
     return this._minifyCode(path, code, map);
   }
-
-  getDebugInfo() {
-    return this._depGraph.getDebugInfo();
-  }
 }
 
 function defineModuleCode(moduleName, code, verboseName = '', dev = true) {
   return [
     '__d(',
+    // @Denis
+    // `${JSON.stringify(moduleName)} /* ${verboseName} */, `,
     `'${verboseName}', `,
     'function(global, require, module, exports) {',
       code,

@@ -10,7 +10,7 @@
 'use strict';
 // @Denis
 require('../../packager/babelRegisterOnly')([
- /local-cli/
+  /local-cli/
 ]);
 const Config = require('../util/Config');
 const defaultConfig = require('../default.config');
