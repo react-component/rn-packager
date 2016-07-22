@@ -257,6 +257,7 @@ class Bundler {
   }) {
     const onResolutionResponse = response => {
       // @Denis 把入口模块的名称也保存
+      // bundle.setMainModuleId(response.getModuleId(getMainModule(response)));
       const mainModule = getMainModule(response);
       bundle.setMainModuleId(response.getModuleId(mainModule));
       bundle.setMainModuleName(mainModule.moduleName);

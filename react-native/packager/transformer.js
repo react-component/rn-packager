@@ -50,16 +50,15 @@ const getBabelRC = (function() {
     // If a .babelrc file doesn't exist in the project,
     // use the Babel config provided with react-native.
     if (!projectBabelRCPath || !fs.existsSync(projectBabelRCPath)) {
-      projectBabelRCPath = path.resolve(__dirname, 'react-packager', 'rn-babelrc.json');
-    }
-    babelRC = json5.parse(
-      fs.readFileSync(
-        projectBabelRCPath)
-      );
+      babelRC = json5.parse(
+        fs.readFileSync(
+          path.resolve(__dirname, 'react-packager', 'rn-babelrc.json'))
+        );
 
-    // Require the babel-preset's listed in the default babel config
-    babelRC.presets = babelRC.presets.map((preset) => require('babel-preset-' + preset));
-    babelRC.plugins = resolvePlugins(babelRC.plugins);
+      // Require the babel-preset's listed in the default babel config
+      babelRC.presets = babelRC.presets.map((preset) => require('babel-preset-' + preset));
+      babelRC.plugins = resolvePlugins(babelRC.plugins);
+    }
     // @yiminghe supports babel.config.js
     let projectBabelConfigPath;
     if (projectRoots && projectRoots.length > 0) {
@@ -69,7 +68,6 @@ const getBabelRC = (function() {
     if (projectBabelConfigPath && fs.existsSync(projectBabelConfigPath)) {
       babelRC = require(projectBabelConfigPath)(babelRC) || babelRC;
     }
-
     return babelRC;
   };
 })();

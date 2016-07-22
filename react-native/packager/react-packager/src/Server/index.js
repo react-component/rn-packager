@@ -12,16 +12,24 @@ const Activity = require('../Activity');
 const AssetServer = require('../AssetServer');
 // @Denis
 // const FileWatcher = require('node-haste').FileWatcher;
+// const getPlatformExtension = require('node-haste').getPlatformExtension;
 const FileWatcher = require('../../../../../node-haste').FileWatcher;
 const getPlatformExtension = require('../../../../../node-haste').getPlatformExtension;
 const Bundler = require('../Bundler');
 const Promise = require('promise');
 const SourceMapConsumer = require('source-map').SourceMapConsumer;
 
-const _ = require('lodash');
 const declareOpts = require('../lib/declareOpts');
 const path = require('path');
 const url = require('url');
+
+function debounce(fn, delay) {
+  var timeout;
+  return () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(fn, delay);
+  };
+}
 
 const validateOpts = declareOpts({
   projectRoots: {
@@ -222,7 +230,7 @@ class Server {
 
     this._fileWatcher.on('all', this._onFileChange.bind(this));
 
-    this._debouncedFileChangeHandler = _.debounce(filePath => {
+    this._debouncedFileChangeHandler = debounce(filePath => {
       this._clearBundles();
       this._informChangeWatchers();
     }, 50);
@@ -509,8 +517,10 @@ class Server {
         const sourceUrl = frame.file;
         // Skip `/debuggerWorker.js` which drives remote debugging because it
         // does not need to symbolication.
+        // Skip anything except http(s), because there is no support for that yet
         if (!urlIndexes.hasOwnProperty(sourceUrl) &&
-            !sourceUrl.endsWith('/debuggerWorker.js')) {
+            !sourceUrl.endsWith('/debuggerWorker.js') &&
+            sourceUrl.startsWith('http')) {
           urlIndexes[sourceUrl] = uniqueUrls.length;
           uniqueUrls.push(sourceUrl);
         }

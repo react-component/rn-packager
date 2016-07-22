@@ -10,7 +10,7 @@
         "spec": ">=2.12.0 <2.13.0",
         "type": "range"
       },
-      "/Users/Denis/Development/rn-pack/rn-packager"
+      "/Users/Denis/Development/react-native"
     ]
   ],
   "_cnpm_publish_time": 1463761308112,
@@ -29,16 +29,7 @@
     "email": "dev@david-aurelio.com"
   },
   "_npmVersion": "3.8.9",
-  "_phantomChildren": {
-    "exec-sh": "0.2.0",
-    "fb-watchman": "1.9.0",
-    "jsonify": "0.0.0",
-    "minimatch": "3.0.2",
-    "minimist": "1.2.0",
-    "ms": "0.7.1",
-    "walker": "1.0.7",
-    "watch": "0.10.0"
-  },
+  "_phantomChildren": {},
   "_requested": {
     "raw": "node-haste@~2.12.0",
     "scope": null,
@@ -49,13 +40,13 @@
     "type": "range"
   },
   "_requiredBy": [
-    "#USER"
+    "/"
   ],
   "_resolved": "http://registry.npm.alibaba-inc.com/node-haste/download/node-haste-2.12.0.tgz",
   "_shasum": "8d4d1cb87f05adcc4207525b789d7dc717f3c1d7",
   "_shrinkwrap": null,
   "_spec": "node-haste@~2.12.0",
-  "_where": "/Users/Denis/Development/rn-pack/rn-packager",
+  "_where": "/Users/Denis/Development/react-native",
   "bugs": {
     "url": "https://github.com/facebook/node-haste/issues"
   },
