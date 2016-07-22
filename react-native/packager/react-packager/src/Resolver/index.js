@@ -109,6 +109,7 @@ class Resolver {
           (opts.blacklistRE && opts.blacklistRE.test(filepath));
       },
       providesModuleNodeModules: [
+        'react',  // @Denis react里还有依赖react-native的模块
         'react-native',
         'react-native-windows',
         // Parse requires AsyncStorage. They will
@@ -167,7 +168,11 @@ class Resolver {
       //
       // resolutionResponse.getModuleId = getModuleId;
       // return resolutionResponse.finalize();
+      console.log("分析依赖模块路径(实际打包的模块):");
       if (includeFramework) {
+        resolutionResponse.dependencies.forEach(mp => {
+          console.log("> ", mp.moduleName);
+        });
         this._getPolyfillDependencies().reverse().forEach(
           polyfill => resolutionResponse.prependDependency(polyfill)
         );
