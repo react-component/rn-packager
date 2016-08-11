@@ -2,9 +2,10 @@
   "name": "test",
   "private": true,
   "dependencies": {
+    "babel-plugin-antd": "~0.5.0",
+    "babel-plugin-transform-runtime": "~6.12.0",
     "react": "^15.1.0",
-    "rn-core": "~0.5.0",
-    "babel-plugin-antd": "~0.4.0"
+    "rn-core": "~0.5.0"
   },
   "scripts": {
     "start": "node ../bin/rnpackager start"
