@@ -21,7 +21,7 @@ const path = require('path');
 
 // @Denis
 const addModuleExports = require('babel-plugin-add-module-exports');
-const presetStage0 = require('babel-preset-stage-0');
+// const presetStage0 = require('babel-preset-stage-0');
 
 
 /**
@@ -62,7 +62,7 @@ const getBabelRC = (function () {
 
       // Require the babel-preset's listed in the default babel config
       babelRC.presets = babelRC.presets.map((preset) => require('babel-preset-' + preset));
-      babelRC.presets.push(presetStage0); // @Denis
+      // babelRC.presets.push(presetStage0); // @Denis
       babelRC.plugins = resolvePlugins(babelRC.plugins);
     }
 
@@ -117,7 +117,7 @@ function transform(src, filename, options) {
 
   const babelConfig = buildBabelConfig(filename, options);
   var jsCode = src;
-  
+
   if (filename.match(/\.tsx?$/)) {
     //@yiminghe ts support
     const transform = require('ts-transformer').transform;
