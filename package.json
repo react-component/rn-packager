@@ -1,7 +1,7 @@
 {
   "name": "rn-packager",
-  "version": "0.7.2",
-  "description": "Based on Facebook Packager v0.30.0, support Core & Business JS Separate.",
+  "version": "0.8.0",
+  "description": "Based on Facebook Packager v0.32.0, support Core & Business JS Separate.",
   "main": "src/index.js",
   "bin": {
     "rnpackager": "bin/rnpackager"
@@ -59,7 +59,7 @@
     "plist": "^1.2.0",
     "progress": "^1.1.8",
     "promise": "^7.1.1",
-    "sane": "^1.2.0",
+    "sane": "^1.3.1",
     "semver": "^5.0.3",
     "source-map": "^0.4.4",
     "temp": "0.8.3",
@@ -67,11 +67,11 @@
     "wordwrap": "^1.0.0",
     "worker-farm": "^1.3.1",
     "ws": "^1.1.0",
-    "xcode": "^0.8.2",
+    "xcode": "^0.8.9",
     "xmldoc": "^0.4.0",
     "yargs": "^3.24.0",
-    "yeoman-environment": "^1.2.7",
-    "yeoman-generator": "^0.20.3"
+    "yeoman-environment": "1.5.3",
+    "yeoman-generator": "0.21.2"
   },
   "devDependencies": {
     "babel-eslint": "^6.0.0",

@@ -11,12 +11,9 @@
 
 const path = require('path');
 const Activity = require('../Activity');
-// @Denis
-// const DependencyGraph = require('node-haste');
-const DependencyGraph = require('../../../../../node-haste');
+const DependencyGraph = require('../node-haste');
 const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
-
 // @Denis 获取模块名单
 const fs = require('fs');
 let coreModulesList = [];
@@ -169,6 +166,7 @@ class Resolver {
       // resolutionResponse.getModuleId = getModuleId;
       // return resolutionResponse.finalize();
       console.log("分析依赖模块路径(实际打包的模块):");
+      console.log("includeFramework:", includeFramework);
       if (includeFramework) {
         resolutionResponse.dependencies.forEach(mp => {
           console.log("> ", mp.moduleName);
@@ -253,6 +251,7 @@ class Resolver {
           resolvedDeps[depName] = depModule.moduleName;
         }
       });
+
     // if we have a canonical ID for the module imported here,
     // we use it, so that require() is always called with the same
     // id for every module.
