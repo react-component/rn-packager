@@ -166,7 +166,6 @@ class Resolver {
       // resolutionResponse.getModuleId = getModuleId;
       // return resolutionResponse.finalize();
       console.log("分析依赖模块路径(实际打包的模块):");
-      console.log("includeFramework:", includeFramework);
       if (includeFramework) {
         resolutionResponse.dependencies.forEach(mp => {
           console.log("> ", mp.moduleName);
