@@ -89,7 +89,17 @@ const validateOpts = declareOpts({
     type: 'boolean',
     default: false,
   },
+  allowBundleUpdates: {
+    type: 'boolean',
+    default: false,
+  },
 });
+
+const assetPropertyBlacklist = new Set([
+  'files',
+  'fileSystemLocation',
+  'path',
+]);
 
 class Bundler {
 
@@ -284,6 +294,7 @@ class Bundler {
         bundle.finalize({
           runMainModule,
           runBeforeMainModule: runBeforeMainModuleIds,
+          allowUpdates: this._opts.allowBundleUpdates,
         });
         return bundle;
       });
@@ -359,7 +370,13 @@ class Bundler {
     onModuleTransformed = noop,
     finalizeBundle = noop,
   }) {
-    const findEventId = Activity.startEvent('find dependencies');
+    const findEventId = Activity.startEvent(
+      'Finding dependencies',
+      null,
+      {
+        telemetric: true,
+      },
+    );
     const modulesByName = Object.create(null);
 
     if (!resolutionResponse) {
@@ -411,6 +428,7 @@ class Bundler {
           entryFilePath,
           transformOptions: response.transformOptions,
           getModuleId: response.getModuleId,
+          dependencyPairs: response.getResolvedDependencyPairs(module),
         }).then(transformed => {
           modulesByName[transformed.name] = module;
           onModuleTransformed({
@@ -549,7 +567,14 @@ class Bundler {
     );
   }
 
-  _toModuleTransport({module, bundle, entryFilePath, transformOptions, getModuleId}) {
+  _toModuleTransport({
+    module,
+    bundle,
+    entryFilePath,
+    transformOptions,
+    getModuleId,
+    dependencyPairs,
+  }) {
     let moduleTransport;
     const moduleId = getModuleId(module);
 
@@ -582,7 +607,7 @@ class Bundler {
         id: moduleId,
         code,
         map,
-        meta: {dependencies, dependencyOffsets, preloaded},
+        meta: {dependencies, dependencyOffsets, preloaded, dependencyPairs},
         sourceCode: source,
         sourcePath: module.path
       });
@@ -605,7 +630,10 @@ class Bundler {
 
       bundle.addAsset(img);
 
-      const code = 'module.exports=' + JSON.stringify(img) + ';';
+      const code =
+        'module.exports=' +
+        JSON.stringify(filterObject(img, assetPropertyBlacklist))
+        + ';';
 
       return new ModuleTransport({
         name: id,
@@ -652,7 +680,7 @@ class Bundler {
         type: assetData.type,
       };
 
-      const json = JSON.stringify(asset);
+      const json =  JSON.stringify(filterObject(asset, assetPropertyBlacklist));
       const assetRegistryPath = 'react-native/Libraries/Image/AssetRegistry';
       const code =
         `module.exports = require(${JSON.stringify(assetRegistryPath)}).registerAsset(${json});`;
@@ -692,6 +720,10 @@ class Bundler {
       : null;
     return Promise.resolve(extraOptions)
       .then(extraOptions => Object.assign(options, extraOptions));
+  }
+
+  getResolver() {
+    return this._resolver;
   }
 }
 
@@ -746,6 +778,14 @@ function debouncedTick(progressBar) {
       start = Date.now();
     }
   };
+}
+
+function filterObject(object, blacklist) {
+  const copied = Object.assign({}, object);
+  for (const key of blacklist) {
+    delete copied[key];
+  }
+  return copied;
 }
 
 module.exports = Bundler;

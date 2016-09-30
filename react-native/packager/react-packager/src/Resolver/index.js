@@ -19,8 +19,6 @@ const fs = require('fs');
 let coreModulesList = [];
 if (fs.existsSync(path.join(process.cwd(), 'coreModulesList.js'))) {
   coreModulesList = require(process.cwd() + '/coreModulesList');
-} else if(fs.existsSync(path.join(process.cwd(), '/node_modules/rn-core/coreModulesList.js'))) {
-  coreModulesList = require(process.cwd() + '/node_modules/rn-core/coreModulesList');
 }
 
 const validateOpts = declareOpts({
@@ -119,7 +117,7 @@ class Resolver {
       preferNativePlatform: true,
       fileWatcher: opts.fileWatcher,
       cache: opts.cache,
-      shouldThrowOnUnresolvedErrors: (_, platform) => platform === 'ios',
+      shouldThrowOnUnresolvedErrors: (_, platform) => platform !== 'android',
       transformCode: opts.transformCode,
       extraNodeModules: opts.extraNodeModules,
       assetDependencies: ['react-native/Libraries/Image/AssetRegistry'],
@@ -162,7 +160,7 @@ class Resolver {
       // this._getPolyfillDependencies().reverse().forEach(
       //   polyfill => resolutionResponse.prependDependency(polyfill)
       // );
-      //
+
       // resolutionResponse.getModuleId = getModuleId;
       // return resolutionResponse.finalize();
       console.log("分析依赖模块路径(实际打包的模块):");
@@ -314,6 +312,10 @@ class Resolver {
   minifyModule({path, code, map}) {
     return this._minifyCode(path, code, map);
   }
+
+  getDependecyGraph() {
+    return this._depGraph;
+  }
 }
 
 function defineModuleCode(moduleName, code, verboseName = '', dev = true) {
@@ -332,7 +334,7 @@ function defineModuleCode(moduleName, code, verboseName = '', dev = true) {
 
 function definePolyfillCode(code,) {
   return [
-    `(function(global) {`,
+    '(function(global) {',
     code,
     `\n})(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : this);`,
   ].join('');

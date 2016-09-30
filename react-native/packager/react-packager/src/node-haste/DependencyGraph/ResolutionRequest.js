@@ -89,6 +89,7 @@ class ResolutionRequest {
       );
       return null;
     };
+
     if (!this._helpers.isNodeModulesDir(fromModule.path)
         && !(isRelativeImport(toModuleName) || isAbsolutePath(toModuleName))) {
       return this._tryResolve(
@@ -99,6 +100,7 @@ class ResolutionRequest {
         forgive,
       );
     }
+
     return this._resolveNodeDependency(fromModule, toModuleName)
       .then(
         cacheResult,

@@ -7,14 +7,14 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
- // @Denis
- 'use strict';
+// @Denis
+'use strict';
 
- require('../../packager/babelRegisterOnly')([
-   /local-cli/
- ]);
- const Config = require('../util/Config');
- const defaultConfig = require('../default.config');
+require('../../packager/babelRegisterOnly')([
+ /local-cli/
+]);
+const Config = require('../util/Config');
+const defaultConfig = require('../default.config');
 
 const buildBundle = require('./buildBundle');
 const outputBundle = require('./output/bundle');

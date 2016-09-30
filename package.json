@@ -1,6 +1,6 @@
 {
   "name": "rn-packager",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Based on Facebook Packager v0.32.0, support Core & Business JS Separate.",
   "main": "src/index.js",
   "bin": {
@@ -59,7 +59,7 @@
     "plist": "^1.2.0",
     "progress": "^1.1.8",
     "promise": "^7.1.1",
-    "sane": "^1.3.1",
+    "sane": "~1.4.1",
     "semver": "^5.0.3",
     "source-map": "^0.4.4",
     "temp": "0.8.3",

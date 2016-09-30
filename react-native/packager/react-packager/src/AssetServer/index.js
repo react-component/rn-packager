@@ -21,16 +21,18 @@ const createTimeoutPromise = (timeout) => new Promise((resolve, reject) => {
 });
 function timeoutableDenodeify(fsFunc, timeout) {
   return function raceWrapper(...args) {
-    return new Promise.race([
+    return Promise.race([
       createTimeoutPromise(timeout),
       Promise.denodeify(fsFunc).apply(this, args)
     ]);
   };
 }
 
-const stat = timeoutableDenodeify(fs.stat, 15000);
-const readDir = timeoutableDenodeify(fs.readdir, 15000);
-const readFile = timeoutableDenodeify(fs.readFile, 15000);
+const FS_OP_TIMEOUT = parseInt(process.env.REACT_NATIVE_FSOP_TIMEOUT, 10) || 15000;
+
+const stat = timeoutableDenodeify(fs.stat, FS_OP_TIMEOUT);
+const readDir = timeoutableDenodeify(fs.readdir, FS_OP_TIMEOUT);
+const readFile = timeoutableDenodeify(fs.readFile, FS_OP_TIMEOUT);
 
 const validateOpts = declareOpts({
   projectRoots: {
