@@ -33,15 +33,15 @@ function bundleWithOutput(argv, config, args, output, packagerInstance) {
 
 function bundle(argv, config, args, packagerInstance) {
   // @Denis 支持构建脚本传入object参数
-  if (!argv.length) {
-    var args = ['bundle'];
-    for(var key in argv) {
-      args.push(key);
-      args.push(argv[key].toString());
-    }
-    argv = args;
-    config = Config.get(__dirname, defaultConfig);
-  }
+  // if (!argv.length) {
+  //   var args = ['bundle'];
+  //   for(var key in argv) {
+  //     args.push(key);
+  //     args.push(argv[key].toString());
+  //   }
+  //   argv = args;
+  //   config = Config.get(__dirname, defaultConfig);
+  // }
   return bundleWithOutput(argv, config, args, undefined, packagerInstance);
 }
 
