@@ -1,6 +1,6 @@
 {
   "name": "rn-packager",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Based on Facebook Packager v0.32.0, support Core & Business JS Separate.",
   "main": "src/index.js",
   "bin": {
