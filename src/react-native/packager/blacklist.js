@@ -81,6 +81,8 @@ var sharedBlacklist = [
   /spm_modules\/.*/,
   /rn-packager\/.*/,
   /rn-tools\/.*/,
+  /tnpm\/.*/,
+  /\.bin\/.*/,
 ];
 
 var platformBlacklists = {
