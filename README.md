@@ -4,8 +4,8 @@
 Standalone ReactNative Packager without framework code.
 
 ![node.js](https://img.shields.io/badge/node.js-%3E=_4.0.0-green.svg?style=flat-square)
-![react-native](https://img.shields.io/badge/react--native-%3D_0.30.0-green.svg)
-![react](https://img.shields.io/badge/react-~_15.2.0-green.svg)
+![react-native](https://img.shields.io/badge/react--native-%3D_0.34.1-green.svg)
+![react](https://img.shields.io/badge/react-~_15.3.1-green.svg)
 
 used with https://github.com/react-component/rn-core
 
@@ -13,13 +13,11 @@ used with https://github.com/react-component/rn-core
 
 ```
 "devDependencies": {
-  "rn-packager": "~0.7.0",
-  "rn-core": "~0.7.0",
-  "react": "~15.2.0"
+  "rn-packager": "~0.9.0",
+  "react-native": "0.34.1",
+  "react": "~15.3.1"
 }
 ```
-
-"rn-core@~0.7.0" is front end code from react-native 0.30.0
 
 ## Bundle
 
