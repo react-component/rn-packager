@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "react": "~15.3.0",
-    "rn-core": "~0.8.0",
+    "react-native": "0.34.1",
     "babel-plugin-antd": "~0.4.0"
   },
   "scripts": {
