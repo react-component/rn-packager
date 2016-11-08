@@ -13,8 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const Promise = require('promise');
 const ProgressBar = require('progress');
-// @Denis
-const Cache = require('../../../../../node-haste').Cache;
+const Cache = require('../node-haste').Cache;
 const Transformer = require('../JSTransformer');
 const Resolver = require('../Resolver');
 const Bundle = require('./Bundle');
@@ -90,7 +89,17 @@ const validateOpts = declareOpts({
     type: 'boolean',
     default: false,
   },
+  allowBundleUpdates: {
+    type: 'boolean',
+    default: false,
+  },
 });
+
+const assetPropertyBlacklist = new Set([
+  'files',
+  'fileSystemLocation',
+  'path',
+]);
 
 class Bundler {
 
@@ -256,6 +265,7 @@ class Bundler {
   }) {
     const onResolutionResponse = response => {
       // @Denis 把入口模块的名称也保存
+      // bundle.setMainModuleId(response.getModuleId(getMainModule(response)));
       const mainModule = getMainModule(response);
       bundle.setMainModuleId(response.getModuleId(mainModule));
       bundle.setMainModuleName(mainModule.moduleName);
@@ -275,6 +285,7 @@ class Bundler {
       ).then(() => {
         const runBeforeMainModuleIds = Array.isArray(runBeforeMainModule)
           ? runBeforeMainModule
+              // @Denis 不需要再去获取ModuleId
               // .map(name => modulesByName[name])
               // .filter(Boolean)
               // .map(response.getModuleId)
@@ -283,6 +294,7 @@ class Bundler {
         bundle.finalize({
           runMainModule,
           runBeforeMainModule: runBeforeMainModuleIds,
+          allowUpdates: this._opts.allowBundleUpdates,
         });
         return bundle;
       });
@@ -358,20 +370,25 @@ class Bundler {
     onModuleTransformed = noop,
     finalizeBundle = noop,
   }) {
-    const findEventId = Activity.startEvent('find dependencies');
+    const findEventId = Activity.startEvent(
+      'Finding dependencies',
+      null,
+      {
+        telemetric: true,
+      },
+    );
     const modulesByName = Object.create(null);
 
     if (!resolutionResponse) {
       let onProgress = noop;
       if (process.stdout.isTTY && !this._opts.silent) {
-        const bar = new ProgressBar(
-          'transformed :current/:total (:percent)',
-          {complete: '=', incomplete: ' ', width: 40, total: 1},
-        );
-        onProgress = (_, total) => {
-          bar.total = total;
-          bar.tick();
-        };
+        const bar = new ProgressBar('transformed :current/:total (:percent)', {
+          complete: '=',
+          incomplete: ' ',
+          width: 40,
+          total: 1,
+        });
+        onProgress = debouncedTick(bar);
       }
 
       resolutionResponse = this.getDependencies({
@@ -382,7 +399,7 @@ class Bundler {
         onProgress,
         minify,
         isolateModuleIDs,
-        includeFramework, // @Denis
+        includeFramework, //@Denis
         generateSourceMaps: unbundle,
       });
     }
@@ -411,6 +428,7 @@ class Bundler {
           entryFilePath,
           transformOptions: response.transformOptions,
           getModuleId: response.getModuleId,
+          dependencyPairs: response.getResolvedDependencyPairs(module),
         }).then(transformed => {
           modulesByName[transformed.name] = module;
           onModuleTransformed({
@@ -482,7 +500,7 @@ class Bundler {
     generateSourceMaps = false,
     isolateModuleIDs = false,
     onProgress,
-    includeFramework, // @Denis
+    includeFramework, //@Denis
   }) {
     return this.getTransformOptions(
       entryFile,
@@ -492,7 +510,7 @@ class Bundler {
         hot,
         generateSourceMaps,
         projectRoots: this._projectRoots,
-        includeFramework, // @Denis
+        includeFramework, //@Denis
       },
     ).then(transformSpecificOptions => {
       const transformOptions = {
@@ -549,14 +567,23 @@ class Bundler {
     );
   }
 
-  _toModuleTransport({module, bundle, entryFilePath, transformOptions, getModuleId}) {
+  _toModuleTransport({
+    module,
+    bundle,
+    entryFilePath,
+    transformOptions,
+    getModuleId,
+    dependencyPairs,
+  }) {
     let moduleTransport;
+    const moduleId = getModuleId(module);
+
     if (module.isAsset_DEPRECATED()) {
       moduleTransport =
-        this._generateAssetModule_DEPRECATED(bundle, module, getModuleId);
+        this._generateAssetModule_DEPRECATED(bundle, module, moduleId);
     } else if (module.isAsset()) {
       moduleTransport = this._generateAssetModule(
-        bundle, module, getModuleId, transformOptions.platform);
+        bundle, module, moduleId, transformOptions.platform);
     }
 
     if (moduleTransport) {
@@ -577,21 +604,17 @@ class Bundler {
 
       return new ModuleTransport({
         name,
-        id: getModuleId(module),
+        id: moduleId,
         code,
         map,
-        meta: {dependencies, dependencyOffsets, preloaded},
+        meta: {dependencies, dependencyOffsets, preloaded, dependencyPairs},
         sourceCode: source,
         sourcePath: module.path
       });
     });
   }
 
-  getGraphDebugInfo() {
-    return this._resolver.getDebugInfo();
-  }
-
-  _generateAssetModule_DEPRECATED(bundle, module, getModuleId) {
+  _generateAssetModule_DEPRECATED(bundle, module, moduleId) {
     return Promise.all([
       sizeOf(module.path),
       module.getName(),
@@ -607,11 +630,14 @@ class Bundler {
 
       bundle.addAsset(img);
 
-      const code = 'module.exports=' + JSON.stringify(img) + ';';
+      const code =
+        'module.exports=' +
+        JSON.stringify(filterObject(img, assetPropertyBlacklist))
+        + ';';
 
       return new ModuleTransport({
         name: id,
-        id: getModuleId(module),
+        id: moduleId,
         code: code,
         sourceCode: code,
         sourcePath: module.path,
@@ -654,7 +680,7 @@ class Bundler {
         type: assetData.type,
       };
 
-      const json = JSON.stringify(asset);
+      const json =  JSON.stringify(filterObject(asset, assetPropertyBlacklist));
       const assetRegistryPath = 'react-native/Libraries/Image/AssetRegistry';
       const code =
         `module.exports = require(${JSON.stringify(assetRegistryPath)}).registerAsset(${json});`;
@@ -670,7 +696,7 @@ class Bundler {
   }
 
 
-  _generateAssetModule(bundle, module, getModuleId, platform = null) {
+  _generateAssetModule(bundle, module, moduleId, platform = null) {
     return Promise.all([
       module.getName(),
       this._generateAssetObjAndCode(module, platform),
@@ -678,7 +704,7 @@ class Bundler {
       bundle.addAsset(asset);
       return new ModuleTransport({
         name,
-        id: getModuleId(module),
+        id: moduleId,
         code,
         meta: meta,
         sourceCode: code,
@@ -694,6 +720,10 @@ class Bundler {
       : null;
     return Promise.resolve(extraOptions)
       .then(extraOptions => Object.assign(options, extraOptions));
+  }
+
+  getResolver() {
+    return this._resolver;
   }
 }
 
@@ -729,6 +759,33 @@ function createModuleIdFactory() {
 
 function getMainModule({dependencies, numPrependedDependencies = 0}) {
   return dependencies[numPrependedDependencies];
+}
+
+function debouncedTick(progressBar) {
+  let n = 0;
+  let start, total;
+
+  return (_, t) => {
+    total = t;
+    n += 1;
+    if (start) {
+      if (progressBar.curr + n >= total || Date.now() - start > 200) {
+        progressBar.total = total;
+        progressBar.tick(n);
+        start = n = 0;
+      }
+    } else {
+      start = Date.now();
+    }
+  };
+}
+
+function filterObject(object, blacklist) {
+  const copied = Object.assign({}, object);
+  for (const key of blacklist) {
+    delete copied[key];
+  }
+  return copied;
 }
 
 module.exports = Bundler;

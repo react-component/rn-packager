@@ -16,9 +16,6 @@ const fs = require('fs');
 const makeHMRConfig = require('babel-preset-react-native/configs/hmr');
 const resolvePlugins = require('babel-preset-react-native/lib/resolvePlugins');
 const inlineRequiresPlugin = require('babel-preset-fbjs/plugins/inline-requires');
-// @Denis
-const addModuleExports = require('babel-plugin-add-module-exports');
-const presetStage0 = require('babel-preset-stage-0');
 const json5 = require('json5');
 const path = require('path');
 
@@ -60,10 +57,17 @@ const getBabelRC = (function() {
 
       // Require the babel-preset's listed in the default babel config
       babelRC.presets = babelRC.presets.map((preset) => require('babel-preset-' + preset));
-      babelRC.presets.push(presetStage0); // @Denis
       babelRC.plugins = resolvePlugins(babelRC.plugins);
     }
+    // @yiminghe supports babel.config.js
+    let projectBabelConfigPath;
+    if (projectRoots && projectRoots.length > 0) {
+      projectBabelConfigPath = path.resolve(projectRoots[0], 'babel.config.js');
+    }
 
+    if (projectBabelConfigPath && fs.existsSync(projectBabelConfigPath)) {
+      babelRC = require(projectBabelConfigPath)(babelRC) || babelRC;
+    }
     return babelRC;
   };
 })();
@@ -83,7 +87,7 @@ function buildBabelConfig(filename, options) {
   let config = Object.assign({}, babelRC, extraConfig);
 
   // Add extra plugins
-  const extraPlugins = [externalHelpersPlugin, addModuleExports]; // @Denis
+  const extraPlugins = [externalHelpersPlugin];
 
   var inlineRequires = options.inlineRequires;
   var blacklist = inlineRequires && inlineRequires.blacklist;

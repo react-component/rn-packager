@@ -61,7 +61,7 @@ class Bundle extends BundleBase {
       this._addRequireCall(super.getMainModuleName());
     }
 
-    super.finalize();
+    super.finalize(options);
   }
 
   _addRequireCall(moduleId) {
@@ -69,10 +69,9 @@ class Bundle extends BundleBase {
     // const code = `;require(${JSON.stringify(moduleId)});`;
     const code = `;require('${moduleId}');`;
     const name = 'require-' + moduleId;
-    debugger;
     super.addModule(new ModuleTransport({
       name,
-      id: this._numRequireCalls - 1,
+      id: -this._numRequireCalls - 1,
       code,
       virtual: true,
       sourceCode: code,
@@ -119,7 +118,6 @@ class Bundle extends BundleBase {
       this._ramBundle = {
         startupModules,
         lazyModules,
-        allModules: modules,
       };
     }
 

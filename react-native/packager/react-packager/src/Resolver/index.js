@@ -11,18 +11,14 @@
 
 const path = require('path');
 const Activity = require('../Activity');
-// @Denis
-const DependencyGraph = require('../../../../../node-haste');
+const DependencyGraph = require('../node-haste');
 const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
-
 // @Denis 获取模块名单
 const fs = require('fs');
 let coreModulesList = [];
 if (fs.existsSync(path.join(process.cwd(), 'coreModulesList.js'))) {
   coreModulesList = require(process.cwd() + '/coreModulesList');
-} else if(fs.existsSync(path.join(process.cwd(), '/node_modules/rn-core/coreModulesList.js'))) {
-  coreModulesList = require(process.cwd() + '/node_modules/rn-core/coreModulesList');
 }
 
 const validateOpts = declareOpts({
@@ -108,7 +104,7 @@ class Resolver {
           (opts.blacklistRE && opts.blacklistRE.test(filepath));
       },
       providesModuleNodeModules: [
-        'react',
+        'react',  // @Denis react里还有依赖react-native的模块
         'react-native',
         'react-native-windows',
         // Parse requires AsyncStorage. They will
@@ -121,7 +117,7 @@ class Resolver {
       preferNativePlatform: true,
       fileWatcher: opts.fileWatcher,
       cache: opts.cache,
-      shouldThrowOnUnresolvedErrors: (_, platform) => platform === 'ios',
+      shouldThrowOnUnresolvedErrors: (_, platform) => platform !== 'android',
       transformCode: opts.transformCode,
       extraNodeModules: opts.extraNodeModules,
       assetDependencies: ['react-native/Libraries/Image/AssetRegistry'],
@@ -150,6 +146,7 @@ class Resolver {
 
   getDependencies(entryPath, options, transformOptions, onProgress, getModuleId) {
     // @Denis
+    // const {platform, recursive} = getDependenciesValidateOpts(options);
     const {platform, recursive, includeFramework} = getDependenciesValidateOpts(options);
     return this._depGraph.getDependencies({
       entryPath,
@@ -163,10 +160,14 @@ class Resolver {
       // this._getPolyfillDependencies().reverse().forEach(
       //   polyfill => resolutionResponse.prependDependency(polyfill)
       // );
-      //
+
       // resolutionResponse.getModuleId = getModuleId;
       // return resolutionResponse.finalize();
+      console.log("分析依赖模块路径(实际打包的模块):");
       if (includeFramework) {
+        resolutionResponse.dependencies.forEach(mp => {
+          console.log("> ", mp.moduleName);
+        });
         this._getPolyfillDependencies().reverse().forEach(
           polyfill => resolutionResponse.prependDependency(polyfill)
         );
@@ -247,6 +248,7 @@ class Resolver {
           resolvedDeps[depName] = depModule.moduleName;
         }
       });
+
     // if we have a canonical ID for the module imported here,
     // we use it, so that require() is always called with the same
     // id for every module.
@@ -311,14 +313,16 @@ class Resolver {
     return this._minifyCode(path, code, map);
   }
 
-  getDebugInfo() {
-    return this._depGraph.getDebugInfo();
+  getDependecyGraph() {
+    return this._depGraph;
   }
 }
 
 function defineModuleCode(moduleName, code, verboseName = '', dev = true) {
   return [
     '__d(',
+    // @Denis
+    // `${JSON.stringify(moduleName)} /* ${verboseName} */, `,
     `'${verboseName}', `,
     'function(global, require, module, exports) {',
       code,
@@ -330,7 +334,7 @@ function defineModuleCode(moduleName, code, verboseName = '', dev = true) {
 
 function definePolyfillCode(code,) {
   return [
-    `(function(global) {`,
+    '(function(global) {',
     code,
     `\n})(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : this);`,
   ].join('');
