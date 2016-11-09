@@ -10,21 +10,22 @@
  */
 'use strict';
 
-const Config = require('./util/Config');
 const getUserCommands = require('./core/getCommands');
 // @Denis
 const fs = require('fs');
+
+import type {ConfigT} from './util/Config';
 
 export type Command = {
   name: string,
   description?: string,
   usage?: string,
-  func: (argv: Array<string>, config: Config, args: Object) => ?Promise<void>,
+  func: (argv: Array<string>, config: ConfigT, args: Object) => ?Promise<void>,
   options?: Array<{
     command: string,
     description?: string,
     parse?: (val: string) => any,
-    default?: (config: Config) => any | any,
+    default?: (config: ConfigT) => any | any,
   }>,
   examples?: Array<{
     desc: string,
@@ -79,7 +80,7 @@ const undocumentedCommands = [
     func: () => {
       console.log([
         'Looks like React Native project already exists in the current',
-        'folder. Run this command from a different folder or remove node_modules/react-native'
+        'folder. Run this command from a different folder or remove node_modules/react-native',
       ].join('\n'));
     },
   },

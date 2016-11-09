@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) 2016-present, Facebook, Inc.
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
@@ -8,4 +8,8 @@
  */
 'use strict';
 
-module.exports = require.requireActual('../node-haste/__mocks__/graceful-fs');
+const {Console} = require('console');
+const {Writable} = require('stream');
+
+const write = (_, __, callback) => callback();
+module.exports = new Console(new Writable({write, writev: write}));
