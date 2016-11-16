@@ -16,9 +16,19 @@ const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
 // @Denis 获取模块名单
 const fs = require('fs');
-let coreModulesList = [];
-if (fs.existsSync(path.join(process.cwd(), 'coreModulesList.js'))) {
-  coreModulesList = require(process.cwd() + '/coreModulesList');
+let rnBlackList = [];
+let rnSimpleBL = [];
+let rnRegExpBL = [];
+if (fs.existsSync(path.join(process.cwd(), 'rn-blacklist.js'))) {
+  rnBlackList = require(process.cwd() + '/rn-blacklist.js');
+}
+
+for (var i in rnBlackList) {
+  if (rnBlackList[i] instanceof RegExp) {
+    rnRegExpBL.push(rnBlackList[i]);
+  } else {
+    rnSimpleBL.push(rnBlackList[i]);
+  }
 }
 
 const validateOpts = declareOpts({
@@ -175,7 +185,7 @@ class Resolver {
         console.log("分析依赖模块路径(实际打包的模块):");
         let dependencies = [];
         resolutionResponse.dependencies.forEach(mp => {
-          if (coreModulesList.indexOf(mp.moduleName) > -1) {
+          if (rnSimpleBL.indexOf(mp.moduleName) > -1 || this._regexpBLTest(mp.moduleName)) {
             resolutionResponse._mappings[mp.hash()] && delete resolutionResponse._mappings[mp.hash()];
           } else {
             console.log("> ", mp.moduleName);
@@ -187,6 +197,16 @@ class Resolver {
       resolutionResponse.getModuleId = getModuleId;
       return resolutionResponse.finalize();
     });
+  }
+
+  // @Denis
+  _regexpBLTest(moduleName) {
+    for (const i in rnRegExpBL) {
+      if (rnRegExpBL[i].test(moduleName)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getModuleSystemDependencies(options) {
