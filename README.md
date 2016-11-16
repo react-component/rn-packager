@@ -55,9 +55,9 @@ var RNPackager = require('rn-packager');
 
 gulp.task('task', function(){
   return RNPackager.bundle.func({
-    "--entry-file": "tests/index.ios.js",
-    "--bundle-output": "tests/index.ios.bundle",
-    "--platform": "ios"
+    "entryFile": "tests/index.ios.js",
+    "bundleOutput": "tests/index.ios.bundle",
+    "platform": "ios"
   });
 });
 ```
