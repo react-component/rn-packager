@@ -7,8 +7,6 @@ Standalone ReactNative Packager without framework code.
 ![react-native](https://img.shields.io/badge/react--native-%3D_0.34.1-green.svg)
 ![react](https://img.shields.io/badge/react-~_15.3.1-green.svg)
 
-used with https://github.com/react-component/rn-core
-
 ## Dependencies
 
 ```
@@ -52,7 +50,7 @@ added query parameters: `framework=true` `runBeforeMainModule=[]`
 var RNPackager = require('rn-packager');
 
 gulp.task('task', function(){
-  return RNPackager.bundle({
+  return RNPackager.bundle.func({
     "--entry-file": "tests/index.ios.js",
     "--bundle-output": "tests/index.ios.bundle",
     "--platform": "ios"
