@@ -16,6 +16,10 @@ Standalone ReactNative Packager without framework code.
   "react": "~15.3.1"
 }
 ```
+### Important: 
+add `rn-blackliast.js` file at your project root dir for filter modules those your don't want package!
+
+see the standard file at `lib/rn-blacklist.js`. your can add your common modules, support RegExp.
 
 ## Bundle
 
