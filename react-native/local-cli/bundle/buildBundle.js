@@ -7,6 +7,11 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
+ // @Denis
+ require('../../packager/babelRegisterOnly')([
+   /react-packager\/src/
+ ]);
+ 
 const log = require('../util/log').out('bundle');
 const outputBundle = require('./output/bundle');
 const path = require('path');

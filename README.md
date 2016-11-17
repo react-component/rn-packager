@@ -7,8 +7,6 @@ Standalone ReactNative Packager without framework code.
 ![react-native](https://img.shields.io/badge/react--native-%3D_0.34.1-green.svg)
 ![react](https://img.shields.io/badge/react-~_15.3.1-green.svg)
 
-used with https://github.com/react-component/rn-core
-
 ## Dependencies
 
 ```
@@ -18,6 +16,10 @@ used with https://github.com/react-component/rn-core
   "react": "~15.3.1"
 }
 ```
+### Important: 
+add `rn-blackliast.js` file at your project root dir for filter modules those your don't want package!
+
+see the standard file at `lib/rn-blacklist.js`. your can add your common modules, support RegExp.
 
 ## Bundle
 
@@ -52,10 +54,10 @@ added query parameters: `framework=true` `runBeforeMainModule=[]`
 var RNPackager = require('rn-packager');
 
 gulp.task('task', function(){
-  return RNPackager.bundle({
-    "--entry-file": "tests/index.ios.js",
-    "--bundle-output": "tests/index.ios.bundle",
-    "--platform": "ios"
+  return RNPackager.bundle.func({
+    "entryFile": "tests/index.ios.js",
+    "bundleOutput": "tests/index.ios.bundle",
+    "platform": "ios"
   });
 });
 ```
