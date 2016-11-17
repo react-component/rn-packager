@@ -189,7 +189,6 @@ class Resolver {
           polyfill => resolutionResponse.prependDependency(polyfill)
         );
       } else {
-        console.log("分析依赖模块路径(实际打包的模块):");
         let dependencies = [];
         resolutionResponse.dependencies.forEach(mp => {
           if (rnSimpleBL.indexOf(mp.moduleName) > -1 || this._regexpBLTest(mp.moduleName)) {
