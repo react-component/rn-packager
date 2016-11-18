@@ -20,14 +20,10 @@ let rnBlackList = [];
 let rnSimpleBL = [];
 let rnRegExpBL = [];
 
-const blparts = __dirname.split('node_modules');
-let projectRoot = blparts[0];
-if (blparts.length < 2) {
-  projectRoot = process.cwd();
-}
-const blacklistPath = path.join(projectRoot, 'rn-blacklist.js');
-if (fs.existsSync(blacklistPath)) {
-  rnBlackList = require(blacklistPath);
+if(process.env.RN_BLACKLIST_PATH){
+  rnBlackList = require(process.env.RN_BLACKLIST_PATH);
+} else if (fs.existsSync(path.join(process.cwd(), 'rn-blacklist.js'))) {
+  rnBlackList = require(process.cwd() + '/rn-blacklist.js');
 }
 
 for (var i in rnBlackList) {

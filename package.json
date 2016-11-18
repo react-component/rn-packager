@@ -1,6 +1,6 @@
 {
   "name": "rn-packager",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "description": "Based on Facebook Packager v0.32.0, support Core & Business JS Separate.",
   "main": "src/index.js",
   "bin": {
@@ -16,6 +16,9 @@
   },
   "bugs": {
     "url": "https://github.com/react-component/rn-packager/issues"
+  },
+  "scripts": {
+    "publish": "git push origin"
   },
   "dependencies": {
     "absolute-path": "^0.0.0",
