@@ -16,13 +16,14 @@ const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
 // @Denis 获取模块名单
 const fs = require('fs');
+const cwd = process.cwd();
 let rnBlackList = [];
 let rnSimpleBL = [];
 let rnRegExpBL = [];
 
 if(process.env.RN_BLACKLIST_PATH){
   rnBlackList = require(process.env.RN_BLACKLIST_PATH);
-} else if (fs.existsSync(path.join(process.cwd(), 'rn-blacklist.js'))) {
+} else if (fs.existsSync(path.join(cwd, 'rn-blacklist.js'))) {
   rnBlackList = require(process.cwd() + '/rn-blacklist.js');
 }
 
@@ -187,7 +188,7 @@ class Resolver {
       } else {
         let dependencies = [];
         resolutionResponse.dependencies.forEach(mp => {
-          if (rnSimpleBL.indexOf(mp.moduleName) > -1 || this._regexpBLTest(mp.moduleName)) {
+          if (rnSimpleBL.indexOf(mp.moduleName) > -1 || this._regexpBLTest(mp.path)) {
             resolutionResponse._mappings[mp.hash()] && delete resolutionResponse._mappings[mp.hash()];
           } else {
             console.log("> ", mp.moduleName);
@@ -202,9 +203,10 @@ class Resolver {
   }
 
   // @Denis
-  _regexpBLTest(moduleName) {
+  // 正则对path的匹配
+  _regexpBLTest(modulePath) {
     for (const i in rnRegExpBL) {
-      if (rnRegExpBL[i].test(moduleName)) {
+      if (rnRegExpBL[i].test(modulePath.replace(cwd, ''))) {
         return true;
       }
     }
