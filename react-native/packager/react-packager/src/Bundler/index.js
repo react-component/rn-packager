@@ -93,6 +93,11 @@ const validateOpts = declareOpts({
     type: 'boolean',
     default: false,
   },
+  // @mc-zone
+  manifestReferrence: {
+    type: 'object',
+    required: false,
+  },
 });
 
 const assetPropertyBlacklist = new Set([
@@ -124,7 +129,21 @@ class Bundler {
       mtime,
     ];
 
-    this._getModuleId = createModuleIdFactory();
+    // @mc-zone
+    // this._getModuleId = createModuleIdFactory();
+    const manifest = opts.manifestReferrence;
+    if (manifest) {
+      this._startModuleId = 1 + manifest.lastId;
+      this._extenalModules = manifest.modules;
+    } else {
+      this._startModuleId = 0;
+      this._extenalModules = null;
+    }
+
+    this._getModuleId = createModuleIdFactory({
+      extenalModules: this._extenalModules,
+      startId: this._startModuleId,
+    });
 
     if (opts.transformModulePath) {
       const transformer = require(opts.transformModulePath);
@@ -174,13 +193,9 @@ class Bundler {
   }
 
   bundle(options) {
-    // @Denis
-    // const {dev, minify, unbundle} = options;
-    const {dev, minify, unbundle, includeFramework} = options;
+    const {dev, minify, unbundle} = options;
     const moduleSystemDeps =
-      // @Denis
-      // this._resolver.getModuleSystemDependencies({dev, unbundle});
-      this._resolver.getModuleSystemDependencies({dev, unbundle, includeFramework});
+      this._resolver.getModuleSystemDependencies({dev, unbundle});
     return this._bundle({
       ...options,
       bundle: new Bundle({dev, minify, sourceMapUrl: options.sourceMapUrl}),
@@ -261,7 +276,6 @@ class Bundler {
     entryModuleOnly,
     resolutionResponse,
     isolateModuleIDs,
-    includeFramework, //@Denis
   }) {
     const onResolutionResponse = response => {
       // @Denis 把入口模块的名称也保存
@@ -273,9 +287,23 @@ class Bundler {
         response.dependencies = response.dependencies.filter(module =>
           module.path.endsWith(entryFile)
         );
+      // @mc-zone
+      } else if (this._extenalModules) {
+        const extenals = this._extenalModules;
+        /* If used extenal reference, we don't need polyfills again */
+        response.dependencies = response.dependencies.filter(module =>
+          module.name && !module.isPolyfill() && !extenals[module.name]
+        );
       } else {
         response.dependencies = moduleSystemDeps.concat(response.dependencies);
       }
+      // @Denis
+      console.log("分析依赖模块路径(实际打包的模块):");
+      response.dependencies.forEach(mp => {
+        if (!mp.isPolyfill()) {
+          console.log("> ", mp.moduleName);
+        }
+      });
     };
     const finalizeBundle = ({bundle, transformedModules, response, modulesByName}) =>
       Promise.all(
@@ -311,7 +339,6 @@ class Bundler {
       onResolutionResponse,
       finalizeBundle,
       isolateModuleIDs,
-      includeFramework, //@Denis
     });
   }
 
@@ -322,7 +349,6 @@ class Bundler {
     sourceMapUrl,
     dev,
     platform,
-    includeFramework, //@Denis
   }) {
     const onModuleTransformed = ({module, transformed, response, bundle}) => {
       const deps = Object.create(null);
@@ -351,7 +377,6 @@ class Bundler {
       finalizeBundle,
       minify: false,
       bundle: new PrepackBundle(sourceMapUrl),
-      includeFramework, //@Denis
     });
   }
 
@@ -365,7 +390,6 @@ class Bundler {
     unbundle,
     resolutionResponse,
     isolateModuleIDs,
-    includeFramework, //@Denis
     onResolutionResponse = noop,
     onModuleTransformed = noop,
     finalizeBundle = noop,
@@ -399,12 +423,18 @@ class Bundler {
         onProgress,
         minify,
         isolateModuleIDs,
-        includeFramework, //@Denis
         generateSourceMaps: unbundle,
       });
     }
 
     return Promise.resolve(resolutionResponse).then(response => {
+      // @mc-zone
+      return Promise.all(response.dependencies.map(module =>
+        module.getName().then(name => {
+          module.name = name;
+        })
+      )).then(() => response);
+    }).then(response => {
       Activity.endEvent(findEventId);
       onResolutionResponse(response);
 
@@ -500,7 +530,6 @@ class Bundler {
     generateSourceMaps = false,
     isolateModuleIDs = false,
     onProgress,
-    includeFramework, //@Denis
   }) {
     return this.getTransformOptions(
       entryFile,
@@ -510,7 +539,6 @@ class Bundler {
         hot,
         generateSourceMaps,
         projectRoots: this._projectRoots,
-        includeFramework, //@Denis
       },
     ).then(transformSpecificOptions => {
       const transformOptions = {
@@ -522,21 +550,21 @@ class Bundler {
 
       return this._resolver.getDependencies(
         entryFile,
-        // @Denis
-        // {dev, platform, recursive},
-        {dev, platform, recursive, includeFramework},
+        {dev, platform, recursive},
         transformOptions,
         onProgress,
-        isolateModuleIDs ? createModuleIdFactory() : this._getModuleId,
+        // @mc-zone
+        // isolateModuleIDs ? createModuleIdFactory() : this._getModuleId,
+        isolateModuleIDs ? createModuleIdFactory({
+          extenalModules: this._extenalModules,
+          startId: this._startModuleId,
+        }) : this._getModuleId,
       );
     });
   }
-  // @Denis
-  // getOrderedDependencyPaths({ entryFile, dev, platform }) {
-  getOrderedDependencyPaths({ entryFile, dev, platform, includeFramework }) {
-    // @Denis
-    // return this.getDependencies({entryFile, dev, platform}).then(
-    return this.getDependencies({entryFile, dev, platform, includeFramework}).then(
+
+  getOrderedDependencyPaths({ entryFile, dev, platform }) {
+    return this.getDependencies({entryFile, dev, platform}).then(
       ({ dependencies }) => {
         const ret = [];
         const promises = [];
@@ -609,7 +637,9 @@ class Bundler {
         map,
         meta: {dependencies, dependencyOffsets, preloaded, dependencyPairs},
         sourceCode: source,
-        sourcePath: module.path
+        sourcePath: module.path,
+        // @mc-zone
+        isPolyfill: module.isPolyfill()
       });
     });
   }
@@ -633,7 +663,7 @@ class Bundler {
       const code =
         'module.exports=' +
         JSON.stringify(filterObject(img, assetPropertyBlacklist))
-        + ';';
+      ';';
 
       return new ModuleTransport({
         name: id,
@@ -745,15 +775,30 @@ function verifyRootExists(root) {
   assert(fs.statSync(root).isDirectory(), 'Root has to be a valid directory');
 }
 
-function createModuleIdFactory() {
+// @mc-zone
+// function createModuleIdFactory() {
+function createModuleIdFactory({extenalModules, startId: nextId = 0}) {
   const fileToIdMap = Object.create(null);
-  let nextId = 0;
-  return ({path}) => {
-    if (!(path in fileToIdMap)) {
-      fileToIdMap[path] = nextId;
+  // @mc-zone
+  // let nextId = 0;
+  // return ({path}) => {
+  //   if (!(path in fileToIdMap)) {
+  //     fileToIdMap[path] = nextId;
+  return (module: {
+    path: string,
+    name?: "string"
+  }) => {
+    if (extenalModules && module.name) {
+      if (module.name in extenalModules) {
+        return extenalModules[module.name].id;
+      }
+    }
+    if (!(module.path in fileToIdMap)) {
+      fileToIdMap[module.path] = nextId;
       nextId += 1;
     }
-    return fileToIdMap[path];
+    // return fileToIdMap[path];
+    return fileToIdMap[module.path];
   };
 }
 

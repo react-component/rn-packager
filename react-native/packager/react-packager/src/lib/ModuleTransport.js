@@ -27,6 +27,9 @@ function ModuleTransport(data) {
   this.meta = data.meta;
   this.polyfill = data.polyfill;
   this.map = data.map;
+  // @mc-zone
+  this.isPolyfill = data.isPolyfill;
+  this.isRequireCall = data.isRequireCall;
 
   Object.freeze(this);
 }

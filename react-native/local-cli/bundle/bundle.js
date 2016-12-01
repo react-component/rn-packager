@@ -7,14 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-// @Denis
-'use strict';
-
-require('../../packager/babelRegisterOnly')([
- /local-cli/
-]);
-const defaultConfig = require('../default.config');
-
 const buildBundle = require('./buildBundle');
 const outputBundle = require('./output/bundle');
 const outputPrepack = require('./output/prepack');
@@ -31,16 +23,6 @@ function bundleWithOutput(argv, config, args, output, packagerInstance) {
 }
 
 function bundle(argv, config, args, packagerInstance) {
-  // @Denis 支持构建脚本传入object参数
-  if (isNaN(argv.length)) {
-    config = config || defaultConfig;
-    var args = argv;
-    args.bundleEncoding = args.bundleEncoding || 'utf8';
-    args.transformer = args.transformer || config.getTransformModulePath();
-  }
-  // console.log('argv:', argv);
-  // console.log('config:', config);
-  // console.log('args:', args);
   return bundleWithOutput(argv, config, args, undefined, packagerInstance);
 }
 

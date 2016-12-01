@@ -14,26 +14,6 @@ const Activity = require('../Activity');
 const DependencyGraph = require('../node-haste');
 const declareOpts = require('../lib/declareOpts');
 const Promise = require('promise');
-// @Denis 获取模块名单
-const fs = require('fs');
-const cwd = process.cwd();
-let rnBlackList = [];
-let rnSimpleBL = [];
-let rnRegExpBL = [];
-
-if(process.env.RN_BLACKLIST_PATH){
-  rnBlackList = require(process.env.RN_BLACKLIST_PATH);
-} else if (fs.existsSync(path.join(cwd, 'rn-blacklist.js'))) {
-  rnBlackList = require(process.cwd() + '/rn-blacklist.js');
-}
-
-for (var i in rnBlackList) {
-  if (rnBlackList[i] instanceof RegExp) {
-    rnRegExpBL.push(rnBlackList[i]);
-  } else {
-    rnSimpleBL.push(rnBlackList[i]);
-  }
-}
 
 const validateOpts = declareOpts({
   projectRoots: {
@@ -96,11 +76,6 @@ const getDependenciesValidateOpts = declareOpts({
     type: 'boolean',
     default: true,
   },
-  // @Denis
-  includeFramework: {
-    type: 'boolean',
-    default: false
-  },
 });
 
 class Resolver {
@@ -118,7 +93,6 @@ class Resolver {
           (opts.blacklistRE && opts.blacklistRE.test(filepath));
       },
       providesModuleNodeModules: [
-        'react',  // @Denis react里还有依赖react-native的模块
         'react-native',
         'react-native-windows',
         // Parse requires AsyncStorage. They will
@@ -159,58 +133,26 @@ class Resolver {
   }
 
   getDependencies(entryPath, options, transformOptions, onProgress, getModuleId) {
-    // @Denis
-    // const {platform, recursive} = getDependenciesValidateOpts(options);
-    const {platform, recursive, includeFramework} = getDependenciesValidateOpts(options);
+    const {platform, recursive} = getDependenciesValidateOpts(options);
     return this._depGraph.getDependencies({
       entryPath,
       platform,
       transformOptions,
       recursive,
       onProgress,
-      includeFramework, // @Denis
     }).then(resolutionResponse => {
-      // @Denis 重写输出逻辑
-      // this._getPolyfillDependencies().reverse().forEach(
-      //   polyfill => resolutionResponse.prependDependency(polyfill)
-      // );
+      // @Denis
+      // console.log("分析依赖模块路径(实际打包的模块):");
+      // resolutionResponse.dependencies.forEach(mp => {
+      //   console.log("> ", mp.moduleName);
+      // });
+      this._getPolyfillDependencies().reverse().forEach(
+        polyfill => resolutionResponse.prependDependency(polyfill)
+      );
 
-      // resolutionResponse.getModuleId = getModuleId;
-      // return resolutionResponse.finalize();
-      console.log("分析依赖模块路径(实际打包的模块):");
-      if (includeFramework) {
-        resolutionResponse.dependencies.forEach(mp => {
-          console.log("> ", mp.moduleName);
-        });
-        this._getPolyfillDependencies().reverse().forEach(
-          polyfill => resolutionResponse.prependDependency(polyfill)
-        );
-      } else {
-        let dependencies = [];
-        resolutionResponse.dependencies.forEach(mp => {
-          if (rnSimpleBL.indexOf(mp.moduleName) > -1 || this._regexpBLTest(mp.path)) {
-            resolutionResponse._mappings[mp.hash()] && delete resolutionResponse._mappings[mp.hash()];
-          } else {
-            console.log("> ", mp.moduleName);
-            dependencies.push(mp);
-          }
-        });
-        resolutionResponse.dependencies = dependencies;
-      }
       resolutionResponse.getModuleId = getModuleId;
       return resolutionResponse.finalize();
     });
-  }
-
-  // @Denis
-  // 正则对path的匹配
-  _regexpBLTest(modulePath) {
-    for (const i in rnRegExpBL) {
-      if (rnRegExpBL[i].test(modulePath.replace(cwd, ''))) {
-        return true;
-      }
-    }
-    return false;
   }
 
   getModuleSystemDependencies(options) {
@@ -221,11 +163,6 @@ class Resolver {
         : path.join(__dirname, 'polyfills/prelude.js');
 
     const moduleSystem = path.join(__dirname, 'polyfills/require.js');
-
-    // @Denis
-    if (!opts.includeFramework) {
-      return [];
-    }
 
     return [
       prelude,

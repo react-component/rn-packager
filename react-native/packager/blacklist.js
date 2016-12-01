@@ -28,8 +28,8 @@ var sharedBlacklist = [
   /rn-packager\/react-native\/local-cli\/.*/,
   'rn-packager/react-native/package.json',
   'rn-packager/react-native/packager/package.json',
-  'react-native/Libraries/react-native/React.js',
-  'react-native/Libraries/react-native/ReactNative.js',
+  // 'react-native/Libraries/react-native/React.js',
+  // 'react-native/Libraries/react-native/ReactNative.js',
 ];
 
 var platformBlacklists = {

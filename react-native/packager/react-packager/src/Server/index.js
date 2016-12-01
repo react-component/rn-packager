@@ -93,6 +93,11 @@ const validateOpts = declareOpts({
     type: 'boolean',
     default: false,
   },
+  // @mc-zone
+  manifestReferrence: {
+    type: 'object',
+    required: false,
+  },
 });
 
 const bundleOpts = declareOpts({
@@ -128,8 +133,7 @@ const bundleOpts = declareOpts({
     type: 'array',
     default: [
       // Ensures essential globals are available and are patched correctly.
-      // @Denis 后续在打包时加上
-      // 'InitializeJavaScriptAppEngine'
+      'InitializeJavaScriptAppEngine'
     ],
   },
   unbundle: {
@@ -150,11 +154,6 @@ const bundleOpts = declareOpts({
   },
   resolutionResponse: {
     type: 'object',
-  },
-  // @Denis
-  includeFramework: {
-    type: 'boolean',
-     default: false,
   },
 });
 
@@ -182,11 +181,6 @@ const dependencyOpts = declareOpts({
   minify: {
     type: 'boolean',
     default: undefined,
-  },
-  // @Denis
-  includeFramework: {
-    type: 'boolean',
-    default: false,
   },
 });
 
@@ -300,10 +294,6 @@ class Server {
       }
 
       const opts = bundleOpts(options);
-      // @Denis 业务代码不需要 InitializeJavaScriptAppEngine
-      if (opts.includeFramework) {
-        opts.runBeforeMainModule.unshift('InitializeJavaScriptAppEngine');
-      }
       const building = this._bundler.bundle(opts);
       building.then(bundle => {
         const modules = bundle.getModules();
@@ -842,9 +832,6 @@ class Server {
         'entryModuleOnly',
         false,
       ),
-      // @Denis 增加runBeforeMainModule配置 和 framework
-      runBeforeMainModule: this._getArrayOptionFromQuery(urlObj.query, 'runBeforeMainModule'),
-      includeFramework: this._getBoolOptionFromQuery(urlObj.query, 'framework'),
     };
   }
 
@@ -854,15 +841,6 @@ class Server {
     }
 
     return query[opt] === 'true' || query[opt] === '1';
-  }
-
-  // @Denis 增加数组解析方法
-  _getArrayOptionFromQuery(query, opt, defaultVal) {
-    var val = defaultVal;
-    try {
-      val = JSON.parse(query[opt]);
-    } catch(e) {}
-    return val;
   }
 }
 

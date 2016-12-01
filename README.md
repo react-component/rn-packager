@@ -9,62 +9,49 @@ Standalone ReactNative Packager without framework code.
 
 ## Dependencies
 
-```
+```json
 "devDependencies": {
   "rn-packager": "~0.9.0",
   "react-native": "0.34.1",
   "react": "~15.3.1"
 }
 ```
-### Important: 
+### Important:
 add `rn-blackliast.js` file at your project root dir for filter modules those your don't want package!
 
 see the standard file at `lib/rn-blacklist.js`. your can add your common modules, support RegExp.
 
 ## Bundle
 
-bundle without framework code and polyfill
+solution from https://github.com/facebook/react-native/pull/10804
 
+Now u can use `manifest.json` file to generate `core modules`.
+
+1. Bundle ur core bundle and output `manifest.json`
+2. Bundle ur app bundle with `manifest.json` that Step 1 generated.
+
+
+### Bundle core
+
+```shell
+$ rnpackager bundle --entry-file node_modules/react-native/Libraries/react-native/react-native.js --bundle-output ~/Dowloads/core.ios.bundle --platform ios --manifest-output core.ios.manifest.json
 ```
-$ node_modules/rn-packager/bin/rnpackager bundle --entry-file  entry/file/path.js --bundle-output out/file/path.jsbundle --platform ios
-```
 
-added parameters:
+### Bundle app
 
-*  --include-framework  Whether to bundle include module `react-native` and polyfills   [default: false]
-*  --runBeforeMainModule  Modules required before main module                           [default: ["InitializeJavaScriptAppEngine"]]
-
-
-## Bundle sdk
-
-```
-$ rnpackager bundle --entry-file node_modules/rn-core/react-native/Libraries/react-native/react-native.js --bundle-output ~/Desktop/react-native-debug.js --platform ios --include-framework
+```shell
+rnpackager bundle --entry-file foo.js --bundle-output ~/Dowloads/foo.ios.bundle --platform ios --manifest-file core.ios.manifest.json
 ```
 
 ## Server
 
-```
+```shell
 $ rnpackager start
-```
-
-added query parameters: `framework=true` `runBeforeMainModule=[]`
-
-## Programmatic API
-```
-var RNPackager = require('rn-packager');
-
-gulp.task('task', function(){
-  return RNPackager.bundle.func({
-    "entryFile": "tests/index.ios.js",
-    "bundleOutput": "tests/index.ios.bundle",
-    "platform": "ios"
-  });
-});
 ```
 
 ## Demo
 
-```
+```shell
 $ cd tests
 $ npm i
 $ rnpackager start

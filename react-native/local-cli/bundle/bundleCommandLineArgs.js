@@ -52,13 +52,12 @@ module.exports = [
     command: '--reset-cache',
     description: 'Removes cached files',
     default: false,
-  }, {  // @Denis 是否集成框架
-    command: '--include-framework [boolean]',
-    description: 'Whether to bundle include core modules and polyfills',
-    default: false,
-  }, { // @Denis 增加runBeforeMainModule
-    command: '--runBeforeMainModule [string]',
-    description: 'Modules required before main module',
-    required: false,
+  }, {
+  // @mc-zone
+    command: '--manifest-output [string]',
+    description: 'File name where to store the manifest file for bundle splitting, ex. ./output/base.manifest.json',
+  }, {
+    command: '--manifest-file [path]',
+    description: 'Path to the manifest file if want to split bundle, ex. ./output/base.manifest.json',
   },
 ];

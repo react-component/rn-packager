@@ -56,18 +56,19 @@ class Bundle extends BundleBase {
     options = options || {};
     if (options.runMainModule) {
       options.runBeforeMainModule.forEach(this._addRequireCall, this);
-      // @Denis 用 Module name 代替
+      // @Denis
       // this._addRequireCall(super.getMainModuleId());
-      this._addRequireCall(super.getMainModuleName());
+      this._addRequireCall(super.getMainModuleId(), super.getMainModuleName());
     }
 
     super.finalize(options);
   }
 
-  _addRequireCall(moduleId) {
-    // @Denis
+  // @Denis
+  // _addRequireCall(moduleId) {
+  _addRequireCall(moduleId, moduleName) {
     // const code = `;require(${JSON.stringify(moduleId)});`;
-    const code = `;require('${moduleId}');`;
+    const code = `;require('${moduleName}');`;
     const name = 'require-' + moduleId;
     super.addModule(new ModuleTransport({
       name,
@@ -77,6 +78,8 @@ class Bundle extends BundleBase {
       sourceCode: code,
       sourcePath: name + '.js',
       meta: {preloaded: true},
+      // @mc-zone
+      isRequireCall: true,
     }));
     this._numRequireCalls += 1;
   }
@@ -185,6 +188,31 @@ class Bundle extends BundleBase {
   getEtag() {
     var eTag = crypto.createHash('md5').update(this.getSource()).digest('hex');
     return eTag;
+  }
+
+  // @mc-zone
+  getManifest() {
+    const modules = this.getModules();
+    const manifest: {
+      modules: Object,
+      lastId: number,
+    } = {
+      modules: {},
+      lastId:0,
+    };
+    modules.forEach(module => {
+      // Filter out polyfills and requireCalls
+      if (module.name && !module.isPolyfill && !module.isRequireCall ) {
+        manifest.modules[module.name] = {
+          id: module.id,
+        };
+      }
+      if (typeof module.id === 'number' && typeof manifest.lastId === 'number') {
+        manifest.lastId = Math.max(manifest.lastId, module.id);
+      }
+    });
+
+    return manifest;
   }
 
   _getSourceMapFile() {

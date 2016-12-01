@@ -7,17 +7,14 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
- // @Denis
- require('../../packager/babelRegisterOnly')([
-   /react-packager\/src/
- ]);
- 
 const log = require('../util/log').out('bundle');
 const outputBundle = require('./output/bundle');
 const path = require('path');
 const Promise = require('promise');
 const saveAssets = require('./saveAssets');
 const Server = require('../../packager/react-packager/src/Server');
+// @mc-zone
+const fs = require('fs');
 const defaultAssetExts = require('../../packager/defaultAssetExts');
 
 function saveBundle(output, bundle, args) {
@@ -37,8 +34,6 @@ function buildBundle(args, config, output = outputBundle, packagerInstance) {
     dev: args.dev,
     minify: !args.dev,
     platform: args.platform,
-    runBeforeMainModule: args.runBeforeMainModule,  // @Denis
-    includeFramework: args.includeFramework,    // @Denis
   };
 
   // If a packager instance was not provided, then just create one for this
@@ -59,6 +54,12 @@ function buildBundle(args, config, output = outputBundle, packagerInstance) {
       resetCache: args.resetCache,
     };
 
+    // @mc-zone
+    if (typeof args.manifestFile === 'string') {
+      options.manifestReferrence = JSON.parse(
+        fs.readFileSync(args.manifestFile, 'utf-8')
+      );
+    }
     packagerInstance = new Server(options);
     shouldClosePackager = true;
   }
