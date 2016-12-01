@@ -55,9 +55,14 @@ class Bundle extends BundleBase {
   finalize(options) {
     options = options || {};
     if (options.runMainModule) {
-      options.runBeforeMainModule.forEach(this._addRequireCall, this);
       // @Denis
+      // options.runBeforeMainModule.forEach(this._addRequireCall, this);
       // this._addRequireCall(super.getMainModuleId());
+      options.runBeforeMainModule.forEach(moduleName => {
+        super.getModules()
+          .filter(module => module.name === moduleName)
+          .forEach(module => this._addRequireCall(module.id, module.name));
+      }, this);
       this._addRequireCall(super.getMainModuleId(), super.getMainModuleName());
     }
 
