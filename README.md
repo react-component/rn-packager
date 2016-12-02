@@ -7,6 +7,11 @@ Standalone ReactNative Packager without framework code.
 ![react-native](https://img.shields.io/badge/react--native-%3D_0.34.1-green.svg)
 ![react](https://img.shields.io/badge/react-~_15.3.1-green.svg)
 
+## Do What?
+
+1. bundle-split, solution from https://github.com/facebook/react-native/pull/10804
+2. use module name as before (ps: core.bundle and app.bundle are different bundle session, so module ids may conflict)
+
 ## Dependencies
 
 ```json
@@ -16,14 +21,7 @@ Standalone ReactNative Packager without framework code.
   "react": "~15.3.1"
 }
 ```
-### Important:
-add `rn-blackliast.js` file at your project root dir for filter modules those your don't want package!
-
-see the standard file at `lib/rn-blacklist.js`. your can add your common modules, support RegExp.
-
 ## Bundle
-
-solution from https://github.com/facebook/react-native/pull/10804
 
 Now u can use `manifest.json` file to generate `core modules`.
 
