@@ -28,32 +28,7 @@ var sharedBlacklist = [
   /rn-packager\/react-native\/local-cli\/.*/,
   'rn-packager/react-native/package.json',
   'rn-packager/react-native/packager/package.json',
-  // 'react-native/Libraries/react-native/React.js',
-  // 'react-native/Libraries/react-native/ReactNative.js',
 ];
-
-var platformBlacklists = {
-  web: [
-    '.ios.js',
-    '.android.js',
-    '.windows.js'
-  ],
-  ios: [
-    '.web.js',
-    '.android.js',
-    '.windows.js',
-  ],
-  android: [
-    '.web.js',
-    '.ios.js',
-    '.windows.js'
-  ],
-  windows: [
-    '.web.js',
-    '.ios.js',
-    '.android.js'
-  ],
-};
 
 function escapeRegExp(pattern) {
   if (Object.prototype.toString.call(pattern) === '[object RegExp]') {
@@ -67,10 +42,9 @@ function escapeRegExp(pattern) {
   }
 }
 
-function blacklist(platform, additionalBlacklist) {
+function blacklist(additionalBlacklist) {
   return new RegExp('(' +
     (additionalBlacklist || []).concat(sharedBlacklist)
-      .concat(platformBlacklists[platform] || [])
       .map(escapeRegExp)
       .join('|') +
     ')$'

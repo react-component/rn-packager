@@ -5,12 +5,32 @@
  * This source code is licensed under the BSD-style license found in the
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @flow
  */
 'use strict';
 
 const ModuleTransport = require('../lib/ModuleTransport');
 
+export type FinalizeOptions = {
+  allowUpdates?: boolean,
+  runBeforeMainModule?: Array<mixed>,
+  runMainModule?: boolean,
+};
+
+export type GetSourceOptions = {
+  inlineSourceMap?: boolean,
+  dev: boolean,
+};
+
 class BundleBase {
+
+  _assets: Array<mixed>;
+  _finalized: boolean;
+  _mainModuleId: number | void;
+  _modules: Array<ModuleTransport>;
+  _source: ?string;
+
   constructor() {
     this._finalized = false;
     this._modules = [];
@@ -26,19 +46,18 @@ class BundleBase {
     return this._mainModuleId;
   }
 
-  setMainModuleId(moduleId) {
+  setMainModuleId(moduleId: number) {
     this._mainModuleId = moduleId;
   }
-
   // @Denis
   getMainModuleName() {
     return this._mainModuleName;
   }
   // @Denis
-  setMainModuleName(moduleName) {
+  setMainModuleName(moduleName: string) {
     this._mainModuleName = moduleName;
   }
-  addModule(module) {
+  addModule(module: ModuleTransport) {
     if (!(module instanceof ModuleTransport)) {
       throw new Error('Expected a ModuleTransport object');
     }
@@ -46,7 +65,7 @@ class BundleBase {
     return this._modules.push(module) - 1;
   }
 
-  replaceModuleAt(index, module) {
+  replaceModuleAt(index: number, module: ModuleTransport) {
     if (!(module instanceof ModuleTransport)) {
       throw new Error('Expeceted a ModuleTransport object');
     }
@@ -62,11 +81,11 @@ class BundleBase {
     return this._assets;
   }
 
-  addAsset(asset) {
+  addAsset(asset: mixed) {
     this._assets.push(asset);
   }
 
-  finalize(options) {
+  finalize(options: FinalizeOptions) {
     if (!options.allowUpdates) {
       Object.freeze(this._modules);
       Object.freeze(this._assets);
@@ -75,7 +94,7 @@ class BundleBase {
     this._finalized = true;
   }
 
-  getSource(options) {
+  getSource(options: GetSourceOptions) {
     this.assertFinalized();
 
     if (this._source) {
@@ -90,13 +109,19 @@ class BundleBase {
     this._source = null;
   }
 
-  assertFinalized(message) {
+  assertFinalized(message?: string) {
     if (!this._finalized) {
       throw new Error(message || 'Bundle needs to be finalized before getting any source');
     }
   }
 
-  toJSON() {
+  setRamGroups(ramGroups: Array<string>) {}
+
+  toJSON(): {
+    modules: Array<ModuleTransport>,
+    assets: Array<mixed>,
+    mainModuleId: number | void,
+  } {
     return {
       modules: this._modules,
       assets: this._assets,
