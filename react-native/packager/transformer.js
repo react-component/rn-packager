@@ -57,7 +57,15 @@ const getBabelRC = (function() {
       // if we find a .babelrc file we tell babel to use it
       babelRC.extends = projectBabelRCPath;
     }
+    // @yiminghe supports babel.config.js
+    let projectBabelConfigPath;
+    if (projectRoots && projectRoots.length > 0) {
+      projectBabelConfigPath = path.resolve(projectRoots[0], 'babel.config.js');
+    }
 
+    if (projectBabelConfigPath && fs.existsSync(projectBabelConfigPath)) {
+      babelRC = require(projectBabelConfigPath)(babelRC) || babelRC;
+    }
     return babelRC;
   };
 })();
