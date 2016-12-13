@@ -17,7 +17,7 @@ Standalone ReactNative Packager without framework code.
 ```json
 "devDependencies": {
   "rn-packager": "~0.10.0",
-  "react-native": "0.39.0",
+  "react-native": "0.39.2",
   "react": "~15.4.0-rc.4"
 }
 ```
