@@ -117,8 +117,8 @@ class ResolutionRequest {
     };
 
     // @Denis 分析多级依赖时的模块名称，符合黑名单中的模块，都走这个逻辑
-    if ((!this._includeFramework 
-        && coreModulesList.indexOf(toModuleName.split('/')[0]) > -1) || 
+    if ((!this._includeFramework
+        && coreModulesList.indexOf(toModuleName.split('/')[0]) > -1) ||
       (!this._helpers.isNodeModulesDir(fromModule.path)
         && toModuleName[0] !== '.' &&
         toModuleName[0] !== '/')) {
@@ -131,11 +131,13 @@ class ResolutionRequest {
       );
     }
 
-    return this._resolveNodeDependency(fromModule, toModuleName)
-      .then(
-        cacheResult,
-        forgive,
-      );
+    return this._tryResolve(
+      () => this._resolveNodeDependency(fromModule, toModuleName),
+      () => this._resolveHasteDependency(fromModule, toModuleName)
+    ).then(
+      cacheResult,
+      forgive,
+    );
   }
   getOrderedDependencies(response, mocksPattern, recursive = true) {
     const self = this;
@@ -245,7 +247,7 @@ class ResolutionRequest {
           return p;
         });
       };
-      
+
       return collect(entry).then(() => response.setMocks(mocks));
     });
   }
