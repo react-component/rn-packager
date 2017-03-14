@@ -4,9 +4,12 @@
   "dependencies": {
     "react": "~15.4.0-rc.4",
     "react-native": "0.39.0",
-    "babel-plugin-antd": "~0.4.0"
+    "react-native-image-picker": "^0.26.2"
   },
   "scripts": {
     "start": "node ../bin/rnpackager start"
+  },
+  "tnpm": {
+    "mode": "yarn"
   }
 }

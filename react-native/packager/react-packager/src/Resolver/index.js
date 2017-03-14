@@ -15,6 +15,10 @@ const declareOpts = require('../lib/declareOpts');
 const defaults = require('../../../defaults');
 const pathJoin = require('path').join;
 
+// @Denis
+const cwd = process.cwd();
+const appName = require(`${cwd}/package.json`).name;
+
 const validateOpts = declareOpts({
   projectRoots: {
     type: 'array',
@@ -63,6 +67,17 @@ const validateOpts = declareOpts({
   resetCache: {
     type: 'boolean',
     default: false,
+  },
+  // @Denis extenalModules
+  extenalModules: {
+    type: 'object',
+    required: false,
+    default: {},
+  },
+  // @Denis manifestReferrence
+  manifestReferrence: {
+    type: 'object',
+    required: false,
   },
 });
 
@@ -114,7 +129,9 @@ class Resolver {
         resetCache: options.resetCache,
       },
     });
-
+    // @Denis Bundler传入extenalModules 和 manifestReferrence #8
+    this._extenalModules = opts.extenalModules;
+    this._manifestReferrence = opts.manifestReferrence;
     this._minifyCode = opts.minifyCode;
     this._polyfillModuleNames = opts.polyfillModuleNames || [];
 
@@ -207,12 +224,29 @@ class Resolver {
     //    require('./c') => require(3);
     // -- in b/index.js:
     //    require('../a/c') => require(3);
-    const replaceModuleId = (codeMatch, quote, depName) =>
-      depName in resolvedDeps
+    // const replaceModuleId = (codeMatch, quote, depName) =>
+    //   depName in resolvedDeps
+    //     // @Denis
+    //     // ? `${JSON.stringify(resolvedDeps[depName])} /* ${depName} */`
+    //     ? `'${resolvedDeps[depName]}'`
+    //     : codeMatch;
+    // @Denis issue #8
+    const replaceModuleId = (codeMatch, quote, depName) => {
+      const resolvedDep = resolvedDeps[depName];
+
+      if (resolvedDep) {
+        const pkgName = resolvedDep.split('/')[0];
+        // 如果有传入manifest.json 并且模块不属于manifest内定义的，并且模块不属于当前App，需要给模块追加命名空间
+        return (this._manifestReferrence && !this._extenalModules[resolvedDep] && pkgName !== appName) ? `${appName}@${resolvedDep}'` : `'${resolvedDep}'`;
+      } else {
+        return codeMatch;
+      }
+      // return resolvedDep
         // @Denis
         // ? `${JSON.stringify(resolvedDeps[depName])} /* ${depName} */`
-        ? `'${resolvedDeps[depName]}'`
-        : codeMatch;
+        // ? `'${resolvedDeps[depName]}'`
+        // : codeMatch;
+    }
 
     code = dependencyOffsets.reduceRight((codeBits, offset) => {
       const first = codeBits.shift();
@@ -250,7 +284,9 @@ class Resolver {
         code,
         meta.dependencyOffsets
       );
-      code = defineModuleCode(moduleId, code, name, dev);
+      // @Denis issue #8
+      // code = defineModuleCode(moduleId, code, name, dev);
+      code = defineModuleCode(moduleId, code, name, dev, this._extenalModules, this._manifestReferrence);
     }
 
 
@@ -267,8 +303,13 @@ class Resolver {
     return this._depGraph;
   }
 }
-
-function defineModuleCode(moduleName, code, verboseName = '', dev = true) {
+// @Denis issue #8
+function defineModuleCode(moduleName, code, verboseName = '', dev = true, extenalModules, manifestReferrence) {
+  const pkgName = verboseName.split('/')[0];
+  // 如果有传入manifest.json 并且模块不属于manifest内定义的，并且模块不属于当前App，需要给模块追加命名空间
+  if (manifestReferrence && !extenalModules[verboseName] && pkgName !== appName) {
+    verboseName = `${appName}@${verboseName}`;
+  }
   return [
     `__d(/* ${verboseName} */`,
     'function(global, require, module, exports) {', // module factory
