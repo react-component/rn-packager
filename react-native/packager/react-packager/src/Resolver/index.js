@@ -241,11 +241,11 @@ class Resolver {
       } else {
         return codeMatch;
       }
-      return resolvedDep
+      // return resolvedDep
         // @Denis
         // ? `${JSON.stringify(resolvedDeps[depName])} /* ${depName} */`
-        ? `'${resolvedDeps[depName]}'`
-        : codeMatch;
+        // ? `'${resolvedDeps[depName]}'`
+        // : codeMatch;
     }
 
     code = dependencyOffsets.reduceRight((codeBits, offset) => {
