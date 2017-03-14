@@ -211,6 +211,9 @@ class Bundler {
       polyfillModuleNames: opts.polyfillModuleNames,
       projectRoots: opts.projectRoots,
       resetCache: opts.resetCache,
+      // @Denis 传入extenalModules 和  manifestReferrence #8
+      extenalModules: this._extenalModules || {},
+      manifestReferrence: opts.manifestReferrence,
       transformCode:
         (module, code, transformCodeOptions) => this._transformer.transformFile(
           module.path,
