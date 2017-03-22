@@ -237,7 +237,7 @@ class Resolver {
       if (resolvedDep) {
         const pkgName = resolvedDep.split('/')[0];
         // 如果有传入manifest.json 并且模块不属于manifest内定义的，并且模块不属于当前App，需要给模块追加命名空间
-        return (this._manifestReferrence && !this._extenalModules[resolvedDep] && pkgName !== appName) ? `${appName}@${resolvedDep}'` : `'${resolvedDep}'`;
+        return (this._manifestReferrence && !this._extenalModules[resolvedDep] && pkgName !== appName) ? `'${appName}@${resolvedDep}'` : `'${resolvedDep}'`;
       } else {
         return codeMatch;
       }
