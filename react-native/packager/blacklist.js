@@ -22,12 +22,7 @@ var sharedBlacklist = [
 
   /heapCapture\/bundle\.js/,
   // @Denis
-  /spm_modules\/.*/,
-  /rn-tools\/.*/,
-  /node_modules\/react-native\/packager\/react-packager\/src\/Resolver\/polyfills\/.*/,
-  /rn-packager\/react-native\/local-cli\/.*/,
-  'rn-packager/react-native/package.json',
-  'rn-packager/react-native/packager/package.json',
+  /rn-packager\/.*/,
 ];
 
 function escapeRegExp(pattern) {
