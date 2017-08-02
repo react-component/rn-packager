@@ -11,10 +11,11 @@
 'use strict';
 
 const meta = require('./meta');
+const relativizeSourceMap = require('../../../packager/src//lib/relativizeSourceMap');
 const writeFile = require('./writeFile');
 
-import type Bundle from '../../../packager/react-packager/src/Bundler/Bundle';
-import type Server from '../../../packager/react-packager/src/Server';
+import type Bundle from '../../../packager/src//Bundler/Bundle';
+import type Server from '../../../packager/src//Server';
 import type {OutputOptions, RequestOptions} from '../types.flow';
 
 function buildBundle(packagerClient: Server, requestOptions: RequestOptions) {
@@ -24,10 +25,14 @@ function buildBundle(packagerClient: Server, requestOptions: RequestOptions) {
   });
 }
 
-function createCodeWithMap(bundle: Bundle, dev: boolean): * {
+function createCodeWithMap(bundle: Bundle, dev: boolean, sourceMapSourcesRoot?: string): * {
+  const map = bundle.getSourceMap({dev});
+  const sourceMap = relativizeSourceMap(
+    typeof map === 'string' ? JSON.parse(map) : map,
+    sourceMapSourcesRoot);
   return {
     code: bundle.getSource({dev}),
-    map: JSON.stringify(bundle.getSourceMap({dev})),
+    map: JSON.stringify(sourceMap),
   };
 }
 
@@ -41,12 +46,13 @@ function saveBundleAndMap(
     bundleEncoding: encoding,
     dev,
     sourcemapOutput,
+    sourcemapSourcesRoot,
     // @mc-zone
     manifestOutput,
   } = options;
 
   log('start');
-  const codeWithMap = createCodeWithMap(bundle, !!dev);
+  const codeWithMap = createCodeWithMap(bundle, !!dev, sourcemapSourcesRoot);
   log('finish');
 
   log('Writing bundle output to:', bundleOutput);
@@ -66,11 +72,12 @@ function saveBundleAndMap(
     log('Writing sourcemap output to:', sourcemapOutput);
     const writeMap = writeFile(sourcemapOutput, codeWithMap.map, null);
     writeMap.then(() => log('Done writing sourcemap output'));
+    // @mc-zone
+    // return Promise.all([writeBundle, writeMetadata, writeMap]);
+    writeTasks.push(writeMetadata, writeMap);
   // @mc-zone
-  //   return Promise.all([writeBundle, writeMetadata, writeMap]);
   // } else {
   //   return writeBundle;
-    writeTasks.push(writeMetadata, writeMap);
   }
   // @mc-zone
   if (manifestOutput) {
@@ -80,7 +87,6 @@ function saveBundleAndMap(
     writeManifest.then(() => log('Done writing manifest output'));
     writeTasks.push(writeManifest);
   }
-
   return Promise.all(writeTasks);
 }
 

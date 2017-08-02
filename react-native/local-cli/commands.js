@@ -10,13 +10,14 @@
  */
 'use strict';
 
-const getUserCommands = require('./core/getCommands');
+const { getProjectCommands } = require('./core');
 // @Denis
 const fs = require('fs');
+const path = require('path');
 
-import type {ConfigT} from './util/Config';
+import type { ConfigT } from './core';
 
-export type Command = {
+export type CommandT = {
   name: string,
   description?: string,
   usage?: string,
@@ -44,6 +45,7 @@ const documentedCommands = [
   require('./library/library'),
   require('./bundle/bundle'),
   require('./bundle/unbundle'),
+  require('./eject/eject'),
   require('./link/link'),
   require('./link/unlink'),
   require('./install/install'),
@@ -57,14 +59,14 @@ const documentedCommands = [
     name: 'version',
     description: 'print version',
     func: printVersion,
-  }
+  },
 ];
 
 // @Denis
 function printVersion() {
   return new Promise((resolve, reject) => {
     var version = JSON.parse(
-      fs.readFileSync(path.resolve(__dirname, '../../../package.json'), 'utf8')
+      fs.readFileSync(path.resolve(__dirname, '../../package.json'), 'utf8')
     ).version;
     console.log(version);
     resolve();
@@ -85,10 +87,10 @@ const undocumentedCommands = [
   },
 ];
 
-const commands: Array<Command> = [
+const commands: Array<CommandT> = [
   ...documentedCommands,
   ...undocumentedCommands,
-  ...getUserCommands(),
+  ...getProjectCommands(),
 ];
 
 module.exports = commands;
