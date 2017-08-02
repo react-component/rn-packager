@@ -4,8 +4,8 @@
 Standalone ReactNative Packager without framework code.
 
 ![node.js](https://img.shields.io/badge/node.js-%3E=_4.0.0-green.svg?style=flat-square)
-![react-native](https://img.shields.io/badge/react--native-%3D_0.39.0-green.svg)
-![react](https://img.shields.io/badge/react-~_15.3.1-green.svg)
+![react-native](https://img.shields.io/badge/react--native-%3D_0.42.3-green.svg)
+![react](https://img.shields.io/badge/react-~_15.4.1-green.svg)
 
 ## Do What?
 
@@ -16,9 +16,9 @@ Standalone ReactNative Packager without framework code.
 
 ```json
 "devDependencies": {
-  "rn-packager": "~0.10.0",
-  "react-native": "0.39.2",
-  "react": "~15.4.0-rc.4"
+  "rn-packager": "~0.12.0",
+  "react-native": "0.42.3",
+  "react": "~15.4.1"
 }
 ```
 ## Bundle
@@ -32,13 +32,13 @@ Now u can use `manifest.json` file to generate `core modules`.
 ### Bundle core
 
 ```shell
-$ rnpackager bundle --entry-file node_modules/react-native/Libraries/react-native/react-native.js --bundle-output ~/Dowloads/core.ios.bundle --platform ios --manifest-output core.ios.manifest.json
+$ rnpackager bundle --entry-file node_modules/react-native/Libraries/react-native/react-native.js --bundle-output core.ios.bundle --platform ios --manifest-output core.ios.manifest.json
 ```
 
 ### Bundle app
 
 ```shell
-rnpackager bundle --entry-file foo.js --bundle-output ~/Dowloads/foo.ios.bundle --platform ios --manifest-file core.ios.manifest.json
+rnpackager bundle --entry-file foo.js --bundle-output foo.ios.bundle --platform ios --manifest-file core.ios.manifest.json
 ```
 
 ## Server
