@@ -15,19 +15,14 @@ var path = require('path');
 var sharedBlacklist = [
   /node_modules[/\\]react[/\\]dist[/\\].*/,
 
-  'downstream/core/invariant.js',
-
   /website\/node_modules\/.*/,
 
   // TODO(jkassens, #9876132): Remove this rule when it's no longer needed.
   'Libraries/Relay/relay/tools/relayUnstableBatchedUpdates.js',
+
+  /heapCapture\/bundle\.js/,
   // @Denis
-  /spm_modules\/.*/,
-  /rn-tools\/.*/,
-  /node_modules\/react-native\/packager\/react-packager\/src\/Resolver\/polyfills\/.*/,
-  /rn-packager\/react-native\/local-cli\/.*/,
-  'rn-packager/react-native/package.json',
-  'rn-packager/react-native/packager/package.json',
+  /node_modules\/rn-packager\/.*/,
 ];
 
 function escapeRegExp(pattern) {

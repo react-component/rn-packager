@@ -2,9 +2,11 @@
   "name": "test",
   "private": true,
   "dependencies": {
-    "react": "~15.4.0-rc.4",
-    "react-native": "0.39.0",
-    "react-native-image-picker": "^0.26.2"
+    "react-native-image-picker": "x"
+  },
+  "devDependencies": {
+    "react": "~15.4.1",
+    "react-native": "0.42.3"
   },
   "scripts": {
     "start": "node ../bin/rnpackager start"
