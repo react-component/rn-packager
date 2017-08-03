@@ -22,7 +22,7 @@ var sharedBlacklist = [
 
   /heapCapture\/bundle\.js/,
   // @Denis
-  /rn-packager\/.*/,
+  /node_modules\/rn-packager\/.*/,
 ];
 
 function escapeRegExp(pattern) {
