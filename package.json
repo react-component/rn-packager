@@ -56,7 +56,7 @@
     "immutable": "~3.7.6",
     "imurmurhash": "^0.1.4",
     "inquirer": "^0.12.0",
-    "jest-haste-map": "18.0.0",
+    "jest-haste-map": "24.5.0",
     "joi": "^6.6.1",
     "json-stable-stringify": "^1.0.1",
     "json5": "^0.4.0",
