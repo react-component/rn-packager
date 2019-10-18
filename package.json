@@ -106,7 +106,7 @@
     "jest": "18.0.0",
     "jest-repl": "18.0.0",
     "jest-runtime": "18.0.0",
-    "mock-fs": "^3.11.0",
+    "mock-fs": "^4.10.2",
     "react": "~15.4.1",
     "react-dom": "~15.4.1",
     "react-test-renderer": "~15.4.1",
