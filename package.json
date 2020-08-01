@@ -47,7 +47,7 @@
     "debug": "^2.2.0",
     "denodeify": "^1.2.1",
     "event-target-shim": "^1.0.5",
-    "fbjs": "^0.8.5",
+    "fbjs": "^2.0.0",
     "fbjs-scripts": "^0.7.0",
     "fs-extra": "^0.26.2",
     "glob": "^5.0.15",
